@@ -1,70 +1,153 @@
-// Importa React y el hook useState para manejar el estado del componente
-import React, { useState } from 'react'
+// TutorVisual.jsx - Versión actualizada con tutorial integrado
+import React, { useState, useEffect } from 'react';
+import { driver } from "driver.js";
+import "driver.js/dist/driver.css";
 
-// Importa los componentes personalizados que conforman la interfaz
-import SelectorEstructura from '../components/SelectorEstructura'  // Selector para elegir tipo de estructura
-import EditorCodigo from '../components/EditorCodigo'              // Editor donde se escribe el código
-import BotonesAccion from '../components/BotonesAccion'            // Botones de control (ejecutar, reiniciar, etc.)
-import CanvasVisual from '../components/CanvasVisual'              // Canvas para visualización gráfica
-import PanelInformacion from '../components/PanelInformacion'      // Panel que muestra información contextual
+// Importa los componentes personalizados
+import SelectorEstructura from '../components/SelectorEstructura';
+import EditorCodigo from '../components/EditorCodigo';
+import BotonesAccion from '../components/BotonesAccion';
+import CanvasVisual from '../components/CanvasVisual';
+import PanelInformacion from '../components/PanelInformacion';
+import BotonTutorial from '../components/botonTutorial';
 
-// Importa los estilos CSS específicos para este componente
-import './tutor.css'
+// Importa la configuración del tutorial
+import { iniciarTutorial, mostrarConsejo } from '../utils/tutorialConfig';
 
-// Define un array constante con las estructuras de datos disponibles
-const estructuras = ['Vector', 'Matriz', 'Pila', 'Cola', 'Lista', 'Arboles', 'Grafos']
+import './tutor.css';
 
-// Componente principal del tutor visual
+const estructuras = ['Vector', 'Matriz', 'Pila', 'Cola', 'Lista', 'Arboles', 'Grafos'];
+
 const TutorVisual = () => {
-  // Estado para almacenar la estructura de datos seleccionada
-  const [estructuraSeleccionada, setEstructuraSeleccionada] = useState('')
-  
-  // Estado para almacenar el código escrito por el usuario
-  const [codigo, setCodigo] = useState('')
+  const [estructuraSeleccionada, setEstructuraSeleccionada] = useState('');
+  const [codigo, setCodigo] = useState('');
+  const [primeraVez, setPrimeraVez] = useState(true);
+
+  // Efecto para mostrar tutorial automáticamente en la primera visita
+  useEffect(() => {
+    const yaVioTutorial = localStorage.getItem('tutorialVisto');
+    
+    if (!yaVioTutorial && primeraVez) {
+      // Pequeño delay para que los elementos se rendericen
+      setTimeout(() => {
+        iniciarTutorial();
+        localStorage.setItem('tutorialVisto', 'true');
+        setPrimeraVez(false);
+      }, 1000);
+    }
+  }, [primeraVez]);
+
+  // Función para manejar cambio de estructura
+  const handleEstructuraChange = (e) => {
+    const nuevaEstructura = e.target.value;
+    setEstructuraSeleccionada(nuevaEstructura);
+    
+    // Mostrar consejo cuando se selecciona una estructura
+    if (nuevaEstructura) {
+      setTimeout(() => {
+        mostrarConsejo(
+          '.code-editor',
+          `¡Genial! Has seleccionado ${nuevaEstructura}`,
+          `Ahora puedes empezar a programar operaciones específicas para ${nuevaEstructura}. ¡Manos a la obra!`
+        );
+      }, 500);
+    }
+  };
+
+  // Funciones para los botones de acción
+  const handleEjecutar = () => {
+    if (!codigo.trim()) {
+      mostrarConsejo(
+        '.code-editor',
+        'Código vacío',
+        'Escribe algo de código antes de ejecutar. ¡No seas tímido, experimenta!'
+      );
+      return;
+    }
+    
+    if (!estructuraSeleccionada) {
+      mostrarConsejo(
+        '.selector-estructura',
+        'Selecciona una estructura',
+        'Primero elige qué estructura de datos quieres usar para tu código.'
+      );
+      return;
+    }
+
+    console.log("Ejecutando código:", codigo);
+    // Aquí iría tu lógica de ejecución
+  };
+
+  const handleReiniciar = () => {
+    setCodigo('');
+    mostrarConsejo(
+      '.info-panel',
+      'Reiniciado',
+      'El código y la visualización han sido reiniciados. ¡Listo para un nuevo intento!'
+    );
+  };
+
+  const handleAnterior = () => {
+    console.log("Paso anterior");
+    // Lógica para paso anterior
+  };
+
+  const handleSiguiente = () => {
+    console.log("Paso siguiente");
+    // Lógica para paso siguiente
+  };
 
   return (
-    // Contenedor principal usando Bootstrap para layout responsive
     <div className="container-fluid tutor-container">
       <div className="row">
-        
-        {/* Panel de control izquierdo (25% del ancho) */}
+        {/* Panel de control izquierdo */}
         <div className="col-md-3 control-panel">
           <h3 className="text-white">Tutor de Estructuras de Datos</h3>
+          
+          {/* Botón de tutorial con estructura seleccionada */}
+          <BotonTutorial estructuraSeleccionada={estructuraSeleccionada} />
 
-          {/* Selector para elegir la estructura de datos */}
-          <SelectorEstructura
-            estructuras={estructuras}
-            valor={estructuraSeleccionada}
-            onChange={(e) => setEstructuraSeleccionada(e.target.value)}
-          />
+          {/* Selector de estructura con clase para targeting */}
+          <div className="selector-estructura">
+            <SelectorEstructura
+              estructuras={estructuras}
+              valor={estructuraSeleccionada}
+              onChange={handleEstructuraChange}
+            />
+          </div>
 
-          {/* Editor de código donde el usuario escribe */}
+          {/* Editor de código */}
           <EditorCodigo
             valor={codigo}
             onChange={(e) => setCodigo(e.target.value)}
           />
 
-          {/* Botones de acción para controlar la ejecución */}
+          {/* Botones de acción */}
           <BotonesAccion
-            onEjecutar={() => console.log("Ejecutar")}      // Ejecuta el código
-            onReiniciar={() => console.log("Reiniciar")}    // Reinicia la visualización
-            onAnterior={() => console.log("Anterior")}      // Paso anterior en la ejecución
-            onSiguiente={() => console.log("Siguiente")}    // Paso siguiente en la ejecución
+            onEjecutar={handleEjecutar}
+            onReiniciar={handleReiniciar}
+            onAnterior={handleAnterior}
+            onSiguiente={handleSiguiente}
           />
         </div>
 
-        {/* Panel de visualización derecho (75% del ancho) */}
+        {/* Panel de visualización derecho */}
         <div className="col-md-9 visualization-panel">
-          {/* Canvas para mostrar la visualización gráfica (comentado por ahora) */}
+          {/* Canvas para visualización */}
           {/*<CanvasVisual />*/}
           
-          {/* Panel que muestra información sobre la línea de código actual */}
-          <PanelInformacion descripcion="Aquí aparecerá lo que pase en la respectiva línea de código." />
+          {/* Panel de información */}
+          <PanelInformacion 
+            descripcion={
+              estructuraSeleccionada 
+                ? `Trabajando con ${estructuraSeleccionada}. ${codigo ? 'Ejecuta tu código para ver la magia!' : 'Escribe algo de código para empezar.'}`
+                : "Selecciona una estructura de datos y escribe código para ver la visualización aquí."
+            }
+          />
         </div>
       </div>
     </div>
-  )
-}
+  );
+};
 
-// Exporta el componente como default para poder importarlo en otros archivos
-export default TutorVisual
+export default TutorVisual;

@@ -440,3 +440,492 @@ body {
 ::-webkit-scrollbar-thumb:hover {
     background: var(--primary-hover);
 }
+/* Estilos adicionales para el tutorial - Agregar al final de tutor.css */
+
+/* Estilos para Driver.js personalizado */
+.driver-popover {
+  background: rgba(30, 41, 59, 0.95) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(71, 85, 105, 0.3) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3) !important;
+  color: var(--text-primary) !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.driver-popover .driver-popover-title {
+  color: var(--text-primary) !important;
+  font-weight: 600 !important;
+  font-size: 1.1rem !important;
+  margin-bottom: 0.75rem !important;
+  background: var(--gradient-primary) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+.driver-popover .driver-popover-description {
+  color: var(--text-secondary) !important;
+  font-size: 0.9rem !important;
+  line-height: 1.5 !important;
+  margin-bottom: 1rem !important;
+}
+
+.driver-popover .driver-popover-footer {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  padding-top: 1rem !important;
+  border-top: 1px solid rgba(71, 85, 105, 0.3) !important;
+}
+
+.driver-popover .driver-popover-navigation-btns {
+  display: flex !important;
+  gap: 0.5rem !important;
+}
+
+.driver-popover .driver-popover-btn {
+  padding: 0.5rem 1rem !important;
+  border: none !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  font-size: 0.85rem !important;
+  cursor: pointer !important;
+  transition: all 0.2s ease !important;
+  font-family: 'Inter', sans-serif !important;
+}
+
+.driver-popover .driver-popover-next-btn {
+  background: var(--gradient-primary) !important;
+  color: white !important;
+}
+
+.driver-popover .driver-popover-prev-btn {
+  background: rgba(71, 85, 105, 0.8) !important;
+  color: var(--text-primary) !important;
+  border: 1px solid rgba(71, 85, 105, 0.5) !important;
+}
+
+.driver-popover .driver-popover-close-btn {
+  background: transparent !important;
+  color: var(--text-muted) !important;
+  border: none !important;
+  font-size: 1.2rem !important;
+  cursor: pointer !important;
+  padding: 0.25rem !important;
+  border-radius: 4px !important;
+}
+
+.driver-popover .driver-popover-btn:hover {
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15) !important;
+}
+
+.driver-popover .driver-popover-close-btn:hover {
+  background: rgba(71, 85, 105, 0.3) !important;
+  color: var(--text-primary) !important;
+}
+
+/* Progreso del tutorial */
+.driver-popover .driver-popover-progress-text {
+  color: var(--text-muted) !important;
+  font-size: 0.8rem !important;
+  font-weight: 500 !important;
+}
+
+/* Animaciones para el overlay */
+.driver-overlay {
+  background: rgba(15, 23, 42, 0.8) !important;
+  backdrop-filter: blur(2px) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Highlight personalizado */
+.driver-highlighted-element {
+  border-radius: 12px !important;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.6) !important;
+  transition: all 0.3s ease !important;
+}
+
+/* Estilos para el selector de estructura cuando está siendo destacado */
+.selector-estructura.driver-highlighted-element {
+  background: rgba(99, 102, 241, 0.1) !important;
+  border: 2px solid var(--primary-color) !important;
+}
+
+/* Estilos para tooltips rápidos */
+.driver-popover.driver-popover-sm {
+  min-width: 250px !important;
+}
+
+.driver-popover.driver-popover-lg {
+  min-width: 400px !important;
+}
+
+/* Responsive para el tutorial */
+@media (max-width: 768px) {
+  .driver-popover {
+    margin: 1rem !important;
+    min-width: calc(100vw - 2rem) !important;
+    max-width: calc(100vw - 2rem) !important;
+  }
+  
+  .driver-popover .driver-popover-title {
+    font-size: 1rem !important;
+  }
+  
+  .driver-popover .driver-popover-description {
+    font-size: 0.85rem !important;
+  }
+  
+  .driver-popover .driver-popover-navigation-btns {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  
+  .driver-popover .driver-popover-btn {
+    width: 100% !important;
+    margin-bottom: 0.5rem !important;
+  }
+}
+
+/* Estilos específicos para elementos del tutorial */
+.tutorial-highlight {
+  position: relative;
+  overflow: visible;
+}
+
+.tutorial-highlight::after {
+  content: '';
+  position: absolute;
+  top: -4px;
+  left: -4px;
+  right: -4px;
+  bottom: -4px;
+  border: 2px solid var(--primary-color);
+  border-radius: 16px;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.tutorial-highlight.active::after {
+  opacity: 1;
+}
+
+/* Indicador de tutorial activo */
+.tutorial-active {
+  position: relative;
+}
+
+.tutorial-active::before {
+  content: '🎯';
+  position: absolute;
+  top: -10px;
+  right: -10px;
+  background: var(--primary-color);
+  color: white;
+  border-radius: 50%;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.8rem;
+  z-index: 1000;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.7);
+  }
+  70% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 10px rgba(99, 102, 241, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0);
+  }
+}
+
+/* Estilos para el menú desplegable del tutorial */
+.tutorial-dropdown {
+  background: rgba(30, 41, 59, 0.95);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+  border-radius: 12px;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.2);
+  animation: slideDown 0.3s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Mejoras para la accesibilidad del tutorial */
+.driver-popover:focus-within {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+.driver-popover .driver-popover-btn:focus {
+  outline: 2px solid var(--primary-color);
+  outline-offset: 2px;
+}
+
+/* Estilos para el indicador de "elemento nuevo" */
+.nuevo-elemento {
+  position: relative;
+}
+
+.nuevo-elemento::after {
+  content: 'NUEVO';
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: var(--success-color);
+  color: white;
+  font-size: 0.6rem;
+  font-weight: 700;
+  padding: 2px 6px;
+  border-radius: 10px;
+  z-index: 1000;
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 20%, 50%, 80%, 100% {
+    transform: translateY(0);
+  }
+  40% {
+    transform: translateY(-5px);
+  }
+  60% {
+    transform: translateY(-3px);
+  }
+}
+
+/* Estilos para elementos deshabilitados durante el tutorial */
+.tutorial-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+/* Estilos para el fondo del tutorial */
+.tutorial-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.9);
+  backdrop-filter: blur(3px);
+  z-index: 999;
+}
+
+/* Estilos para texto de ayuda contextual */
+.help-text {
+  color: var(--text-muted);
+  font-size: 0.8rem;
+  font-style: italic;
+  margin-top: 0.5rem;
+  padding: 0.5rem;
+  background: rgba(99, 102, 241, 0.1);
+  border-left: 3px solid var(--primary-color);
+  border-radius: 0 8px 8px 0;
+}
+
+/* Estilos para iconos de ayuda */
+.help-icon {
+  color: var(--primary-color);
+  cursor: help;
+  margin-left: 0.5rem;
+  transition: all 0.2s ease;
+}
+
+.help-icon:hover {
+  color: var(--primary-hover);
+  transform: scale(1.1);
+}
+
+/* Estilos para el indicador de paso actual */
+.current-step-indicator {
+  position: fixed;
+  top: 20px;
+  right: 20px;
+  background: rgba(30, 41, 59, 0.9);
+  color: var(--text-primary);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  z-index: 1001;
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(71, 85, 105, 0.3);
+}
+
+/* Estilos para transiciones suaves */
+.tutorial-transition {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Estilos para el tooltip de progreso */
+.progress-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(15, 23, 42, 0.9);
+  color: var(--text-primary);
+  padding: 0.5rem 0.75rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  white-space: nowrap;
+  margin-bottom: 0.5rem;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.3s ease;
+}
+
+.progress-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top-color: rgba(15, 23, 42, 0.9);
+}
+
+.progress-tooltip.show {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Estilos para elementos interactivos del tutorial */
+.tutorial-interactive {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.tutorial-interactive:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+/* Estilos para el botón de saltar tutorial */
+.skip-tutorial {
+  position: fixed;
+  top: 20px;
+  left: 20px;
+  background: rgba(239, 68, 68, 0.9);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  z-index: 1001;
+  transition: all 0.2s ease;
+  backdrop-filter: blur(10px);
+}
+
+.skip-tutorial:hover {
+  background: rgba(239, 68, 68, 1);
+  transform: translateY(-1px);
+}
+
+/* Estilos para animaciones de entrada */
+.tutorial-enter {
+  animation: tutorialEnter 0.5s ease-out;
+}
+
+@keyframes tutorialEnter {
+  from {
+    opacity: 0;
+    transform: scale(0.9) translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
+
+/* Estilos para animaciones de salida */
+.tutorial-exit {
+  animation: tutorialExit 0.3s ease-in;
+}
+
+@keyframes tutorialExit {
+  from {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+  to {
+    opacity: 0;
+    transform: scale(0.9) translateY(-20px);
+  }
+}
+
+/* Estilos para el modo oscuro mejorado del tutorial */
+.tutorial-dark-mode {
+  --tutorial-bg: rgba(15, 23, 42, 0.95);
+  --tutorial-border: rgba(71, 85, 105, 0.3);
+  --tutorial-text: #f1f5f9;
+  --tutorial-text-muted: #94a3b8;
+  --tutorial-accent: var(--primary-color);
+}
+
+/* Estilos para el indicador de teclas de atajo */
+.keyboard-shortcut {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.keyboard-shortcut kbd {
+  background: rgba(71, 85, 105, 0.6);
+  color: var(--text-primary);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-size: 0.7rem;
+  font-family: 'JetBrains Mono', monospace;
+  border: 1px solid rgba(71, 85, 105, 0.8);
+}
+
+/* Estilos para el tutorial completado */
+.tutorial-completed {
+  background: linear-gradient(135deg, var(--success-color), #059669);
+  color: white;
+  padding: 1rem;
+  border-radius: 12px;
+  text-align: center;
+  margin: 1rem 0;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.tutorial-completed h4 {
+  margin-bottom: 0.5rem;
+  font-size: 1.1rem;
+}
+
+.tutorial-completed p {
+  margin-bottom: 0;
+  font-size: 0.9rem;
+  opacity: 0.9;
+}
