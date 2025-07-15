@@ -1,4 +1,4 @@
-// TutorVisual.jsx - Versión actualizada con tutorial integrado
+// TutorVisual.jsx - Versión actualizada con consejos solo bajo demanda
 import React, { useState, useEffect } from 'react';
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -9,7 +9,7 @@ import EditorCodigo from '../components/EditorCodigo';
 import BotonesAccion from '../components/BotonesAccion';
 import CanvasVisual from '../components/CanvasVisual';
 import PanelInformacion from '../components/PanelInformacion';
-import BotonTutorial from '../components/botonTutorial';
+import BotonTutorial from '../components/BotonTutorial';
 
 // Importa la configuración del tutorial
 import { iniciarTutorial, mostrarConsejo } from '../utils/tutorialConfig';
@@ -22,6 +22,7 @@ const TutorVisual = () => {
   const [estructuraSeleccionada, setEstructuraSeleccionada] = useState('');
   const [codigo, setCodigo] = useState('');
   const [primeraVez, setPrimeraVez] = useState(true);
+  const [mostrarConsejos, setMostrarConsejos] = useState(false); // Estado para controlar consejos
 
   // Efecto para mostrar tutorial automáticamente en la primera visita
   useEffect(() => {
@@ -42,8 +43,8 @@ const TutorVisual = () => {
     const nuevaEstructura = e.target.value;
     setEstructuraSeleccionada(nuevaEstructura);
     
-    // Mostrar consejo cuando se selecciona una estructura
-    if (nuevaEstructura) {
+    // Solo mostrar consejo si el usuario ha habilitado los consejos
+    if (nuevaEstructura && mostrarConsejos) {
       setTimeout(() => {
         mostrarConsejo(
           '.code-editor',
@@ -57,20 +58,26 @@ const TutorVisual = () => {
   // Funciones para los botones de acción
   const handleEjecutar = () => {
     if (!codigo.trim()) {
-      mostrarConsejo(
-        '.code-editor',
-        'Código vacío',
-        'Escribe algo de código antes de ejecutar. ¡No seas tímido, experimenta!'
-      );
+      // Solo mostrar consejo si están habilitados
+      if (mostrarConsejos) {
+        mostrarConsejo(
+          '.code-editor',
+          'Código vacío',
+          'Escribe algo de código antes de ejecutar. ¡No seas tímido, experimenta!'
+        );
+      }
       return;
     }
     
     if (!estructuraSeleccionada) {
-      mostrarConsejo(
-        '.selector-estructura',
-        'Selecciona una estructura',
-        'Primero elige qué estructura de datos quieres usar para tu código.'
-      );
+      // Solo mostrar consejo si están habilitados
+      if (mostrarConsejos) {
+        mostrarConsejo(
+          '.selector-estructura',
+          'Selecciona una estructura',
+          'Primero elige qué estructura de datos quieres usar para tu código.'
+        );
+      }
       return;
     }
 
@@ -80,11 +87,14 @@ const TutorVisual = () => {
 
   const handleReiniciar = () => {
     setCodigo('');
-    mostrarConsejo(
-      '.info-panel',
-      'Reiniciado',
-      'El código y la visualización han sido reiniciados. ¡Listo para un nuevo intento!'
-    );
+    // Solo mostrar consejo si están habilitados
+    if (mostrarConsejos) {
+      mostrarConsejo(
+        '.info-panel',
+        'Reiniciado',
+        'El código y la visualización han sido reiniciados. ¡Listo para un nuevo intento!'
+      );
+    }
   };
 
   const handleAnterior = () => {
@@ -97,6 +107,11 @@ const TutorVisual = () => {
     // Lógica para paso siguiente
   };
 
+  // Función para alternar el estado de los consejos
+  const toggleConsejos = () => {
+    setMostrarConsejos(!mostrarConsejos);
+  };
+
   return (
     <div className="container-fluid tutor-container">
       <div className="row">
@@ -104,6 +119,27 @@ const TutorVisual = () => {
         <div className="col-md-3 control-panel">
           <h3 className="text-white">Tutor de Estructuras de Datos</h3>
           
+          {/* Control de consejos - Switch de bombillo */}
+          <div className="mb-3">
+            <div className="consejos-switch-container">
+              <label className="consejos-switch">
+                <input 
+                  type="checkbox" 
+                  checked={mostrarConsejos}
+                  onChange={toggleConsejos}
+                />
+                <span className="consejos-slider">
+                  <span className="bombillo-icon">
+                    💡
+                  </span>
+                </span>
+              </label>
+              <span className="consejos-label">
+                {mostrarConsejos ? 'Consejos activados' : 'Consejos desactivados'}
+              </span>
+            </div>
+          </div>
+
           {/* Botón de tutorial con estructura seleccionada */}
           <BotonTutorial estructuraSeleccionada={estructuraSeleccionada} />
 
@@ -134,7 +170,7 @@ const TutorVisual = () => {
         {/* Panel de visualización derecho */}
         <div className="col-md-9 visualization-panel">
           {/* Canvas para visualización */}
-          {/*<CanvasVisual />*/}
+          {/*<CanvasVisual />
           
           {/* Panel de información */}
           <PanelInformacion 
