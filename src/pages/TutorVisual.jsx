@@ -170,7 +170,7 @@ const TutorVisual = () => {
         {/* Panel de visualización derecho */}
         <div className="col-md-9 visualization-panel">
           {/* Canvas para visualización */}
-          {/*<CanvasVisual />
+          <CanvasVisual />
           
           {/* Panel de información */}
           <PanelInformacion 

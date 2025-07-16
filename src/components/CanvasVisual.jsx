@@ -12,7 +12,7 @@ const CanvasVisual = () => (
       - width/height: dimensiones del canvas en píxeles
       - Se usará para renderizar gráficamente las estructuras (vectores, matrices, árboles, etc.)
     */}
-    <canvas id="visualizationCanvas" width="800" height="600"></canvas>
+    <canvas id="visualizationCanvas" width="1400" height="600"></canvas>
     
     {/* 
       Indicador de carga que aparece mientras se procesa la visualización
