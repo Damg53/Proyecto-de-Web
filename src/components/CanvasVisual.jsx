@@ -1,4 +1,4 @@
-// CanvasVisual.jsx - Componente para visualizar estructuras de datos (CORREGIDO)
+// CanvasVisual.jsx - Componente para visualizar estructuras de datos 
 import React, { useEffect, useRef } from 'react';
 
 const CanvasVisual = ({ estadoVisualizacion }) => {
@@ -10,10 +10,10 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     const ctx = canvas.getContext('2d');
    
     // LIMPIEZA COMPLETA Y TOTAL DEL CANVAS
-    ctx.save(); // Guardar estado actual
-    ctx.setTransform(1, 0, 0, 1, 0, 0); // Resetear transformaciones
-    ctx.clearRect(0, 0, canvas.width, canvas.height); // Limpiar todo
-    ctx.restore(); // Restaurar estado
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
     
     // Crear un nuevo contexto limpio
     ctx.fillStyle = '#ffffff';
@@ -63,7 +63,9 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     estructuras.forEach((estructura, index) => {
       const alturaMaxima = alturaPromedioPorEstructura - 30;
       
-      if (estructura.tipo === 'listaDoble') {
+      if (estructura.tipo === 'arbol') {
+        y = dibujarArbol(ctx, estructura, y, canvasWidth, alturaMaxima);
+      } else if (estructura.tipo === 'listaDoble') {
         y = dibujarListaDoble(ctx, estructura, y, canvasWidth, alturaMaxima);
       } else if (estructura.elementos && Array.isArray(estructura.elementos) && 
           estructura.elementos.length > 0 && estructura.elementos[0].indice !== undefined) {
@@ -75,6 +77,326 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
       
       y += 30;
     });
+  };
+
+  const dibujarArbol = (ctx, arbol, startY, canvasWidth, alturaMaxima) => {
+    let y = startY;
+    const margen = 40;
+    
+    // Calcular tamaño de fuente para el título
+    const fontSizeTitulo = Math.max(16, Math.min(24, canvasWidth * 0.02));
+    
+    // Dibujar título del árbol con información adicional
+    ctx.fillStyle = '#2c3e50';
+    ctx.font = `bold ${fontSizeTitulo}px Arial`;
+    ctx.textAlign = 'center';
+    
+    let titulo = `Árbol Binario ${arbol.nombre} (Nodos: ${arbol.nodos ? arbol.nodos.length : 0})`;
+    
+    // Agregar información de la última operación
+    if (arbol.ultimaBusqueda !== null && arbol.ultimaBusqueda !== undefined) {
+      titulo += ` - Búsqueda: ${arbol.ultimaBusqueda}`;
+    }
+    if (arbol.ultimoRecorrido && arbol.ultimoRecorrido.length > 0) {
+      titulo += ` - Recorrido: [${arbol.ultimoRecorrido.join(', ')}]`;
+    }
+    
+    ctx.fillText(titulo, canvasWidth / 2, y + 15);
+    
+    // Mayor separación entre título y árbol
+    y += fontSizeTitulo + 50;
+    
+    if (!arbol.raiz || !arbol.nodos || arbol.nodos.length === 0) {
+      // Árbol vacío
+      ctx.fillStyle = '#95a5a6';
+      ctx.font = '18px Arial';
+      ctx.fillText('Árbol vacío', canvasWidth / 2, y + 40);
+      
+      const rectVacio = {
+        x: canvasWidth / 2 - 100,
+        y: y,
+        width: 200,
+        height: 60
+      };
+      
+      ctx.strokeStyle = '#bdc3c7';
+      ctx.lineWidth = 2;
+      ctx.setLineDash([10, 5]);
+      ctx.strokeRect(rectVacio.x, rectVacio.y, rectVacio.width, rectVacio.height);
+      ctx.setLineDash([]);
+      
+      return y + 120;
+    }
+    
+    // Calcular posiciones del árbol de manera centrada
+    const radioNodo = arbol.radioNodo || 25;
+    const centroX = canvasWidth / 2;
+    const inicioY = y + 30;
+    
+    // Calcular el ancho necesario para el árbol
+    const profundidad = calcularProfundidadArbol(arbol.raiz);
+    const anchoNivel = Math.pow(2, profundidad - 1) * 120; // Espacio entre nodos del último nivel
+    const margenArbol = Math.max(50, (canvasWidth - anchoNivel) / 2);
+    
+    // Recalcular posiciones de los nodos para centrarlos
+    if (arbol.nodos && arbol.nodos.length > 0) {
+      calcularPosicionesNodos(arbol.raiz, centroX, inicioY, anchoNivel / 2, 80);
+    }
+    
+    // Primero dibujar todas las conexiones
+    if (arbol.nodos && arbol.nodos.length > 0) {
+      arbol.nodos.forEach(nodo => {
+        if (nodo.izquierdo) {
+          dibujarConexion(
+            ctx,
+            nodo.posicion.x,
+            nodo.posicion.y,
+            nodo.izquierdo.posicion.x,
+            nodo.izquierdo.posicion.y,
+            '#34495e'
+          );
+        }
+        if (nodo.derecho) {
+          dibujarConexion(
+            ctx,
+            nodo.posicion.x,
+            nodo.posicion.y,
+            nodo.derecho.posicion.x,
+            nodo.derecho.posicion.y,
+            '#34495e'
+          );
+        }
+      });
+      
+      // Luego dibujar todos los nodos
+      arbol.nodos.forEach(nodo => {
+        dibujarNodoArbol(ctx, nodo.posicion.x, nodo.posicion.y, radioNodo, nodo);
+      });
+    }
+    
+    // Calcular altura total usada por el árbol
+    const maxY = arbol.nodos ? Math.max(...arbol.nodos.map(n => n.posicion.y + radioNodo)) : inicioY;
+    let alturaFinal = maxY + 40;
+    
+    // Dibujar leyenda de estados si hay nodos con estados especiales
+    const hayEstadosEspeciales = arbol.nodos && arbol.nodos.some(nodo => 
+      nodo.resaltado || nodo.visitado || nodo.encontrado || nodo.esNuevo
+    );
+    
+    if (hayEstadosEspeciales) {
+      alturaFinal = dibujarLeyendaEstados(ctx, canvasWidth, alturaFinal + 20);
+    }
+    
+    return alturaFinal;
+  };
+
+  // Nueva función para calcular la profundidad del árbol
+  const calcularProfundidadArbol = (nodo) => {
+    if (!nodo) return 0;
+    
+    const profundidadIzquierda = nodo.izquierdo ? calcularProfundidadArbol(nodo.izquierdo) : 0;
+    const profundidadDerecha = nodo.derecho ? calcularProfundidadArbol(nodo.derecho) : 0;
+    
+    return Math.max(profundidadIzquierda, profundidadDerecha) + 1;
+  };
+
+  // Nueva función para calcular posiciones de nodos de manera recursiva
+  const calcularPosicionesNodos = (nodo, x, y, separacionHorizontal, separacionVertical) => {
+    if (!nodo) return;
+    
+    // Asignar posición al nodo actual
+    nodo.posicion = { x, y };
+    
+    // Calcular posiciones de los hijos
+    if (nodo.izquierdo) {
+      calcularPosicionesNodos(
+        nodo.izquierdo, 
+        x - separacionHorizontal, 
+        y + separacionVertical,
+        separacionHorizontal / 2,
+        separacionVertical
+      );
+    }
+    
+    if (nodo.derecho) {
+      calcularPosicionesNodos(
+        nodo.derecho, 
+        x + separacionHorizontal, 
+        y + separacionVertical,
+        separacionHorizontal / 2,
+        separacionVertical
+      );
+    }
+  };
+
+  const dibujarNodoArbol = (ctx, x, y, radio, nodo) => {
+    // Validar parámetros
+    if (!nodo || typeof x !== 'number' || typeof y !== 'number' || 
+        isNaN(x) || isNaN(y) || radio <= 0) {
+      console.warn('Parámetros inválidos para dibujar nodo árbol:', { x, y, radio, nodo });
+      return;
+    }
+    
+    ctx.save();
+    
+    // Configurar colores según el estado del nodo
+    let colorFondo = '#ffffff';
+    let colorBorde = '#34495e';
+    let colorTexto = '#2c3e50';
+    
+    // Priorizar estados (el orden importa)
+    if (nodo.encontrado) {
+      // Nodo encontrado en búsqueda
+      colorFondo = '#d1ecf1';
+      colorBorde = '#17a2b8';
+      colorTexto = '#0c5460';
+    } else if (nodo.visitado) {
+      // Nodo visitado en recorrido
+      colorFondo = '#d4edda';
+      colorBorde = '#28a745';
+      colorTexto = '#155724';
+    } else if (nodo.resaltado) {
+      // Nodo resaltado (camino de búsqueda)
+      colorFondo = '#fff3cd';
+      colorBorde = '#ffc107';
+      colorTexto = '#856404';
+    } else if (nodo.esNuevo) {
+      // Nodo recién insertado
+      colorFondo = '#f8d7da';
+      colorBorde = '#dc3545';
+      colorTexto = '#721c24';
+    }
+    
+    // Agregar sombra al nodo
+    ctx.shadowColor = 'rgba(0, 0, 0, 0.2)';
+    ctx.shadowBlur = 4;
+    ctx.shadowOffsetX = 2;
+    ctx.shadowOffsetY = 2;
+    
+    // Dibujar círculo del nodo
+    ctx.fillStyle = colorFondo;
+    ctx.beginPath();
+    ctx.arc(x, y, radio, 0, 2 * Math.PI);
+    ctx.fill();
+    
+    // Resetear sombra
+    ctx.shadowColor = 'transparent';
+    ctx.shadowBlur = 0;
+    ctx.shadowOffsetX = 0;
+    ctx.shadowOffsetY = 0;
+    
+    // Dibujar borde
+    ctx.strokeStyle = colorBorde;
+    ctx.lineWidth = nodo.encontrado ? 3 : 2; // Borde más grueso para nodo encontrado
+    ctx.beginPath();
+    ctx.arc(x, y, radio, 0, 2 * Math.PI);
+    ctx.stroke();
+    
+    // Dibujar valor del nodo
+    ctx.fillStyle = colorTexto;
+    const fontSize = Math.max(12, Math.min(18, radio * 0.6));
+    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    
+    const valorTexto = nodo.valor !== undefined && nodo.valor !== null ? nodo.valor.toString() : '';
+    const valorRecortado = valorTexto.length > 4 ? valorTexto.substring(0, 4) + '...' : valorTexto;
+    ctx.fillText(valorRecortado, x, y);
+    
+    // Dibujar indicador especial para nodo encontrado
+    if (nodo.encontrado) {
+      ctx.fillStyle = '#17a2b8';
+      ctx.font = 'bold 12px Arial';
+      ctx.fillText('●', x + radio + 10, y - radio);
+    }
+    
+    // Dibujar número de orden para recorridos
+    if (nodo.visitado && nodo.ordenVisita !== undefined) {
+      ctx.fillStyle = '#28a745';
+      ctx.font = 'bold 10px Arial';
+      ctx.fillText(nodo.ordenVisita.toString(), x - radio - 10, y - radio - 10);
+    }
+    
+    ctx.restore();
+  };
+
+  const dibujarConexion = (ctx, x1, y1, x2, y2, color = '#34495e') => {
+    // Validar parámetros
+    if (typeof x1 !== 'number' || typeof y1 !== 'number' || 
+        typeof x2 !== 'number' || typeof y2 !== 'number' ||
+        isNaN(x1) || isNaN(y1) || isNaN(x2) || isNaN(y2)) {
+      return;
+    }
+    
+    ctx.save();
+    ctx.strokeStyle = color;
+    ctx.lineWidth = 2;
+    
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    
+    ctx.restore();
+  };
+
+  const dibujarLeyendaEstados = (ctx, canvasWidth, startY) => {
+    const legendItems = [
+      { color: '#ffffff', border: '#34495e', text: 'Normal', textColor: '#2c3e50' },
+      { color: '#f8d7da', border: '#dc3545', text: 'Nuevo', textColor: '#721c24' },
+      { color: '#fff3cd', border: '#ffc107', text: 'Búsqueda', textColor: '#856404' },
+      { color: '#d4edda', border: '#28a745', text: 'Visitado', textColor: '#155724' },
+      { color: '#d1ecf1', border: '#17a2b8', text: 'Encontrado', textColor: '#0c5460' }
+    ];
+    
+    ctx.save();
+    
+    // Fondo de la leyenda
+    const legendWidth = 400;
+    const legendHeight = 60;
+    const legendX = (canvasWidth - legendWidth) / 2;
+    const legendY = startY;
+    
+    ctx.fillStyle = 'rgba(248, 249, 250, 0.9)';
+    ctx.strokeStyle = '#dee2e6';
+    ctx.lineWidth = 1;
+    ctx.fillRect(legendX, legendY, legendWidth, legendHeight);
+    ctx.strokeRect(legendX, legendY, legendWidth, legendHeight);
+    
+    // Título de la leyenda
+    ctx.fillStyle = '#495057';
+    ctx.font = 'bold 14px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('Estados de los Nodos', canvasWidth / 2, legendY + 15);
+    
+    // Dibujar items de la leyenda
+    const itemWidth = legendWidth / legendItems.length;
+    legendItems.forEach((item, index) => {
+      const itemX = legendX + (index * itemWidth) + (itemWidth / 2);
+      const itemY = legendY + 35;
+      
+      // Círculo pequeño
+      ctx.fillStyle = item.color;
+      ctx.beginPath();
+      ctx.arc(itemX - 15, itemY, 8, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      ctx.strokeStyle = item.border;
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(itemX - 15, itemY, 8, 0, 2 * Math.PI);
+      ctx.stroke();
+      
+      // Texto
+      ctx.fillStyle = item.textColor;
+      ctx.font = '11px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText(item.text, itemX - 5, itemY + 1);
+    });
+    
+    ctx.restore();
+    
+    return startY + legendHeight + 20;
   };
 
   const dibujarListaDoble = (ctx, lista, startY, canvasWidth, alturaMaxima) => {

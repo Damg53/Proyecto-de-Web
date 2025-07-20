@@ -1,13 +1,15 @@
-// InterpretadorEstructuras.js
+// InterpretadorEstructuras.js - Actualizado con soporte para árboles
 import VectorVisual from './VectorVisual.js';
 import MatrizVisual from './MatrizVisual.js';
 import ListaVisual from './ListaVisual.js';
+import ArbolVisual from './ArbolVisual.js';
 
 class InterpretadorEstructuras {
     constructor() {
         this.vectores = {};
         this.matrices = {};
         this.listas = {};
+        this.arboles = {}; // Nueva estructura para árboles
         this.historialDeshacer = [];
         this.pasoActual = 0;
         this.lineasCodigo = [];
@@ -25,25 +27,28 @@ class InterpretadorEstructuras {
         this.vectores = {};
         this.matrices = {};
         this.listas = {};
+        this.arboles = {}; // Limpiar árboles también
         this.historialDeshacer = [];
     }
 
-    // NUEVO MÉTODO: Limpiar solo las estructuras sin afectar el código cargado
+    // Limpiar solo las estructuras sin afectar el código cargado
     limpiarEstructuras() {
         this.vectores = {};
         this.matrices = {};
         this.listas = {};
+        this.arboles = {}; // Limpiar árboles
         this.historialDeshacer = [];
         this.pasoActual = 0;
         this.resultadoEjecucion = [];
         // Mantener this.lineasCodigo para preservar el código cargado
     }
 
-    // NUEVO MÉTODO: Limpiar todo completamente
+    // Limpiar todo completamente
     limpiarTodo() {
         this.vectores = {};
         this.matrices = {};
         this.listas = {};
+        this.arboles = {}; // Limpiar árboles
         this.historialDeshacer = [];
         this.pasoActual = 0;
         this.resultadoEjecucion = [];
@@ -86,11 +91,15 @@ class InterpretadorEstructuras {
     ejecutarPaso(indicePaso) {
         const linea = this.lineasCodigo[indicePaso];
         
-        // Primero intenta con matrices
+        // Primero intenta con árboles (nuevo)
+        const resultadoArbol = ArbolVisual.ejecutarPaso(linea, this.arboles, this.historialDeshacer);
+        if (resultadoArbol) return resultadoArbol;
+        
+        // Luego con matrices
         const resultadoMatriz = MatrizVisual.ejecutarPaso(linea, this.matrices, this.historialDeshacer);
         if (resultadoMatriz) return resultadoMatriz;
         
-        // Luego con listas
+        // Después con listas
         const resultadoLista = ListaVisual.ejecutarPaso(linea, this.listas, this.historialDeshacer);
         if (resultadoLista) return resultadoLista;
         
@@ -98,7 +107,7 @@ class InterpretadorEstructuras {
         return VectorVisual.ejecutarPaso(linea, this.vectores, this.historialDeshacer);
     }
 
-    // MÉTODO MODIFICADO: Ahora es alias de limpiarTodo para mantener compatibilidad
+    // Alias de limpiarTodo para mantener compatibilidad
     reiniciar() {
         this.limpiarTodo();
     }
@@ -107,9 +116,10 @@ class InterpretadorEstructuras {
         const vectores = Object.values(this.vectores).map(v => v.obtenerEstadoVisual());
         const matrices = Object.values(this.matrices).map(m => m.obtenerEstadoVisual());
         const listas = Object.values(this.listas).map(l => l.obtenerEstadoVisual());
+        const arboles = Object.values(this.arboles).map(a => a.obtenerEstadoVisual()); // Incluir árboles
         
         return {
-            estructuras: [...vectores, ...matrices, ...listas],
+            estructuras: [...vectores, ...matrices, ...listas, ...arboles],
             pasoActual: this.pasoActual,
             totalPasos: this.lineasCodigo.length,
             resultadoEjecucion: this.resultadoEjecucion,
@@ -118,7 +128,7 @@ class InterpretadorEstructuras {
         };
     }
 
-    // NUEVO MÉTODO: Obtener solo las estructuras del tipo especificado
+    // Obtener solo las estructuras del tipo especificado
     obtenerEstructurasPorTipo(tipo) {
         switch(tipo.toLowerCase()) {
             case 'vector':
@@ -129,6 +139,10 @@ class InterpretadorEstructuras {
             case 'lista doble':
             case 'lista simple':
                 return Object.values(this.listas).map(l => l.obtenerEstadoVisual());
+            case 'arbol':
+            case 'arbol binario':
+            case 'arboles':
+                return Object.values(this.arboles).map(a => a.obtenerEstadoVisual());
             default:
                 return [];
         }

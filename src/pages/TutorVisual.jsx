@@ -1,4 +1,4 @@
-// TutorVisual.jsx - Versión completa con soporte para listas
+// TutorVisual.jsx - Versión completa con soporte para listas y árboles
 import React, { useState, useEffect } from 'react';
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -14,12 +14,12 @@ import BotonTutorial from '../components/BotonTutorial';
 // Importa la configuración del tutorial
 import { iniciarTutorial, mostrarConsejo } from '../utils/tutorialConfig';
 
-// Importa el interpretador de estructuras con soporte para listas
+// Importa el interpretador de estructuras con soporte completo
 import { InterpretadorEstructuras } from "../utils/index.js";
 
 import './tutor.css';
 
-// Añadimos 'Lista' a las estructuras disponibles
+// Estructuras disponibles incluyendo árboles
 const estructuras = ['Vector', 'Matriz', 'Pila', 'Cola', 'Lista', 'Arboles', 'Grafos'];
 
 const TutorVisual = () => {
@@ -70,6 +70,19 @@ miLista.insertarFinal("B");
 miLista.insertarEn(1, "C");
 miLista.eliminarInicio();
 miLista.eliminarEn(0);`);
+    } else if (nuevaEstructura === 'Arboles') {
+        // Código de ejemplo para árbol binario
+        setCodigo(`BOF = new ArbolBinario(); 
+BOF.insertar(50);
+BOF.insertar(30);
+BOF.insertar(20);
+BOF.insertar(40);
+BOF.insertar(60);
+BOF.insertar(80);
+BOF.insertar(70);
+BOF.insertar(90);
+BOF.buscar(40);
+BOF.inorder();`);
     } else {
         setCodigo('');
     }
@@ -220,21 +233,48 @@ miLista.eliminarEn(0);`);
       }
       
       if (estructuras.length > 0) {
-        // Para listas, podríamos querer mostrar información adicional
+        // Información específica según el tipo de estructura
         const nombres = estructuras.map(e => e.nombre).join(', ');
-        descripcion += `Estructuras en memoria: ${nombres}`;
+        
+        if (estructuraSeleccionada === 'Arboles') {
+          const arbol = estructuras.find(e => e.tipo === 'arbol');
+          if (arbol) {
+            const numNodos = arbol.nodos ? arbol.nodos.length : 0;
+            descripcion += `Árbol '${arbol.nombre}' con ${numNodos} nodos`;
+          }
+        } else if (estructuraSeleccionada === 'Lista') {
+          const lista = estructuras.find(e => e.tipo === 'listaDoble');
+          if (lista) {
+            const numElementos = lista.elementos ? lista.elementos.length : 0;
+            descripcion += `Lista '${lista.nombre}' con ${numElementos} elementos`;
+          }
+        } else {
+          descripcion += `Estructuras en memoria: ${nombres}`;
+        }
       }
       
       return descripcion;
     }
     
     if (estructuraSeleccionada) {
-      return `Trabajando con ${estructuraSeleccionada}. ${codigo ? 'Ejecuta tu código para ver la magia!' : 'Escribe algo de código para empezar.'}`;
+      let mensaje = `Trabajando con ${estructuraSeleccionada}. `;
+      
+      if (estructuraSeleccionada === 'Arboles') {
+        mensaje += codigo ? 'Ejecuta tu código para ver el árbol binario!' : 'Escribe operaciones para crear y manipular árboles.';
+      } else if (estructuraSeleccionada === 'Lista') {
+        mensaje += codigo ? 'Ejecuta tu código para ver la lista enlazada!' : 'Escribe operaciones para crear y manipular listas.';
+      } else {
+        mensaje += codigo ? 'Ejecuta tu código para ver la magia!' : 'Escribe algo de código para empezar.';
+      }
+      
+      return mensaje;
     }
     
     return "Selecciona una estructura de datos y escribe código para ver la visualización aquí.";
   };
 
+  // Función para obtener operaciones disponibles según la estructura
+  
   return (
     <div className="container-fluid tutor-container">
       <div className="row">
@@ -296,6 +336,14 @@ miLista.eliminarEn(0);`);
                 Modo: {modoEjecucion === 'completo' ? 'Ejecución completa' : 'Paso a paso'}
                 <br />
                 Paso: {estadoVisualizacion.pasoActual}/{estadoVisualizacion.totalPasos}
+                {estadoVisualizacion.estructuras && estructuraSeleccionada === 'Arboles' && (
+                  <>
+                    <br />
+                    Nodos en memoria: {estadoVisualizacion.estructuras
+                      .filter(e => e.tipo === 'arbol')
+                      .reduce((total, arbol) => total + (arbol.nodos ? arbol.nodos.length : 0), 0)}
+                  </>
+                )}
               </small>
             </div>
           )}
@@ -310,6 +358,19 @@ miLista.eliminarEn(0);`);
           <PanelInformacion 
             descripcion={obtenerDescripcion()}
           />
+
+          {/* Panel de ayuda contextual para árboles */}
+          {estructuraSeleccionada === 'Arboles' && (
+            <div className="mt-3 p-3 bg-light rounded">
+              <h6>💡 Consejos para Árboles Binarios:</h6>
+              <ul className="mb-0">
+                <li><small>Los valores menores van al hijo izquierdo</small></li>
+                <li><small>Los valores mayores van al hijo derecho</small></li>
+                <li><small>Los recorridos muestran diferentes órdenes de visita</small></li>
+                <li><small>La búsqueda resalta el camino hasta el nodo encontrado</small></li>
+              </ul>
+            </div>
+          )}
         </div>
       </div>
     </div>
