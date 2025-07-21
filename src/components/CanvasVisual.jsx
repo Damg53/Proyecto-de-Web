@@ -1,4 +1,4 @@
-// CanvasVisual.jsx - Componente para visualizar estructuras de datos 
+// CanvasVisual.jsx - Componente para visualizar estructuras de datos (incluye grafos mejorados)
 import React, { useEffect, useRef } from 'react';
 
 const CanvasVisual = ({ estadoVisualizacion }) => {
@@ -14,11 +14,11 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.restore();
-    
+   
     // Crear un nuevo contexto limpio
     ctx.fillStyle = '#ffffff';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
-    
+   
     // Resetear TODAS las propiedades de dibujo
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
@@ -54,29 +54,281 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
   const dibujarEstructuras = (ctx, estructuras) => {
     const canvasWidth = ctx.canvas.width;
     const canvasHeight = ctx.canvas.height;
-    const margen = 30;
+    const margen = 40;
     const espacioDisponible = canvasHeight - (margen * 2);
     const alturaPromedioPorEstructura = espacioDisponible / estructuras.length;
-    
+   
     let y = margen;
    
     estructuras.forEach((estructura, index) => {
-      const alturaMaxima = alturaPromedioPorEstructura - 30;
-      
-      if (estructura.tipo === 'arbol') {
+      const alturaMaxima = alturaPromedioPorEstructura - 50; // Más espacio entre estructuras
+     
+      if (estructura.tipo === 'grafo') {
+        y = dibujarGrafo(ctx, estructura, y, canvasWidth, alturaMaxima);
+      } else if (estructura.tipo === 'arbol') {
         y = dibujarArbol(ctx, estructura, y, canvasWidth, alturaMaxima);
       } else if (estructura.tipo === 'listaDoble') {
         y = dibujarListaDoble(ctx, estructura, y, canvasWidth, alturaMaxima);
-      } else if (estructura.elementos && Array.isArray(estructura.elementos) && 
+      } else if (estructura.elementos && Array.isArray(estructura.elementos) &&
           estructura.elementos.length > 0 && estructura.elementos[0].indice !== undefined) {
         y = dibujarVector(ctx, estructura, y, canvasWidth, alturaMaxima);
-      } else if (estructura.elementos && Array.isArray(estructura.elementos) && 
+      } else if (estructura.elementos && Array.isArray(estructura.elementos) &&
                  estructura.elementos.length > 0 && estructura.elementos[0].fila !== undefined) {
         y = dibujarMatriz(ctx, estructura, y, canvasWidth, alturaMaxima);
       }
-      
-      y += 30;
+     
+      y += 50; // Mayor separación entre estructuras
     });
+  };
+
+  const dibujarGrafo = (ctx, grafo, yInicio, canvasWidth, alturaMaxima) => {
+    const margenLateral = 80;
+    const centroX = canvasWidth / 2;
+    const centroY = yInicio + alturaMaxima / 2 + 50; // Empuja el grafo hacia abajo
+    const radioNodo = 35; // Nodos más grandes
+    
+    // Calcular el centro real de los nodos para mejor centrado
+    let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+    grafo.nodos.forEach(nodo => {
+      if (nodo.posicion) {
+        minX = Math.min(minX, nodo.posicion.x);
+        maxX = Math.max(maxX, nodo.posicion.x);
+        minY = Math.min(minY, nodo.posicion.y);
+        maxY = Math.max(maxY, nodo.posicion.y);
+      }
+    });
+    
+    const centroRealX = (minX + maxX) / 2;
+    const centroRealY = (minY + maxY) / 2;
+    const anchoGrafo = maxX - minX;
+    const altoGrafo = maxY - minY;
+    
+    // Factor de escala optimizado para mayor separación de nodos
+    const escalaMaxima = Math.min(
+      (canvasWidth * 0.7) / Math.max(anchoGrafo, 1),
+      (alturaMaxima * 0.7) / Math.max(altoGrafo, 1)
+    );
+    const escala = Math.min(escalaMaxima, 2.5); // Escala mucho más grande
+
+    // Título del grafo con mejor diseño
+    ctx.save();
+    ctx.font = 'bold 20px Arial';
+    ctx.fillStyle = '#2c3e50';
+    ctx.textAlign = 'center';
+    ctx.fillText(
+      `${grafo.nombre} (${grafo.dirigido ? 'Dirigido' : 'No Dirigido'})`,
+      centroX,
+      yInicio + 1
+    );
+    
+    // Subtítulo con información del grafo
+    ctx.font = '18px Arial';
+    ctx.fillStyle = '#7f8c8d';
+    ctx.fillText(
+      `${grafo.totalNodos} nodos, ${Math.floor(grafo.totalAristas / (grafo.dirigido ? 1 : 2))} aristas`,
+      centroX,
+      yInicio + 25
+    );
+    ctx.restore();
+
+    // Información adicional sobre el estado del grafo
+    if (grafo.tipoRecorrido || grafo.ultimaOperacion) {
+      ctx.save();
+      ctx.font = 'bold 15px Arial';
+      ctx.fillStyle = '#e74c3c';
+      
+      let infoTexto = '';
+      if (grafo.tipoRecorrido === 'dfs') {
+        infoTexto = `DFS: ${grafo.estadoRecorrido.join(' → ')}`;
+      } else if (grafo.tipoRecorrido === 'bfs') {
+        infoTexto = `BFS: ${grafo.estadoRecorrido.join(' → ')}`;
+      } else if (grafo.tipoRecorrido === 'dijkstra') {
+        infoTexto = `Dijkstra ejecutado - Camino más corto encontrado`;
+      } else if (grafo.ultimaOperacion) {
+        infoTexto = grafo.ultimaOperacion;
+      }
+      
+      ctx.fillText(infoTexto, centroX, yInicio + 65);
+      ctx.restore();
+    }
+
+    // Dibujar aristas primero (para que queden detrás de los nodos)
+    grafo.aristas.forEach(arista => {
+      const origenPos = arista.posicionOrigen;
+      const destinoPos = arista.posicionDestino;
+      
+      if (!origenPos || !destinoPos) return;
+
+      // Ajustar posiciones al canvas con mayor escala
+      const x1 = centroX + (origenPos.x - centroRealX) * escala;
+      const y1 = centroY + (origenPos.y - centroRealY) * escala;
+      const x2 = centroX + (destinoPos.x - centroRealX) * escala;
+      const y2 = centroY + (destinoPos.y - centroRealY) * escala;
+
+      ctx.save();
+      
+      // Color y grosor de la arista
+      if (arista.resaltada) {
+        ctx.strokeStyle = '#e74c3c';
+        ctx.lineWidth = 4;
+      } else {
+        ctx.strokeStyle = '#34495e';
+        ctx.lineWidth = 3;
+      }
+
+      // Calcular punto de conexión en el borde del nodo (no en el centro)
+      const dx = x2 - x1;
+      const dy = y2 - y1;
+      const distancia = Math.sqrt(dx * dx + dy * dy);
+      
+      if (distancia === 0) {
+        ctx.restore();
+        return;
+      }
+      
+      const startX = x1 + (dx / distancia) * radioNodo;
+      const startY = y1 + (dy / distancia) * radioNodo;
+      const endX = x2 - (dx / distancia) * radioNodo;
+      const endY = y2 - (dy / distancia) * radioNodo;
+
+      // Dibujar línea con sombra
+      ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+      ctx.shadowBlur = 2;
+      ctx.shadowOffsetX = 1;
+      ctx.shadowOffsetY = 1;
+      
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      ctx.lineTo(endX, endY);
+      ctx.stroke();
+      
+      ctx.shadowColor = 'rgba(0, 0, 0, 0)';
+      ctx.shadowBlur = 0;
+
+      // Dibujar flecha si es dirigido - MÁS GRANDE Y VISIBLE
+      if (grafo.dirigido) {
+        const anguloFlecha = Math.atan2(dy, dx);
+        const tamañoFlecha = 20; // Flecha más grande
+        
+        ctx.fillStyle = arista.resaltada ? '#e74c3c' : '#34495e';
+        ctx.beginPath();
+        ctx.moveTo(endX, endY);
+        ctx.lineTo(
+          endX - tamañoFlecha * Math.cos(anguloFlecha - Math.PI / 6),
+          endY - tamañoFlecha * Math.sin(anguloFlecha - Math.PI / 6)
+        );
+        ctx.lineTo(
+          endX - tamañoFlecha * Math.cos(anguloFlecha + Math.PI / 6),
+          endY - tamañoFlecha * Math.sin(anguloFlecha + Math.PI / 6)
+        );
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Dibujar peso de la arista con mejor diseño
+      if (arista.peso !== 1) {
+        const pesoX = (startX + endX) / 2;
+        const pesoY = (startY + endY) / 2;
+        
+        // Fondo del peso
+        ctx.fillStyle = '#ffffff';
+        ctx.strokeStyle = arista.resaltada ? '#e74c3c' : '#34495e';
+        ctx.lineWidth = 2;
+        ctx.beginPath();
+        ctx.arc(pesoX, pesoY, 12, 0, 2 * Math.PI);
+        ctx.fill();
+        ctx.stroke();
+        
+        // Texto del peso
+        ctx.fillStyle = arista.resaltada ? '#e74c3c' : '#2c3e50';
+        ctx.font = 'bold 16px Arial';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(arista.peso.toString(), pesoX, pesoY);
+      }
+
+      ctx.restore();
+    });
+
+    // Dibujar nodos con mejor diseño
+    grafo.nodos.forEach(nodo => {
+      if (!nodo.posicion) return;
+
+      // Ajustar posición al canvas con mayor escala
+      const x = centroX + (nodo.posicion.x - centroRealX) * escala;
+      const y = centroY + (nodo.posicion.y - centroRealY) * escala;
+
+      ctx.save();
+
+      // Determinar color del nodo según su estado
+      let colorFondo = '#3498db'; // Azul por defecto
+      let colorBorde = '#2980b9';
+      let colorTexto = '#ffffff';
+
+      if (nodo.encontrado) {
+        colorFondo = '#27ae60'; // Verde para encontrado
+        colorBorde = '#229954';
+      } else if (nodo.visitado) {
+        colorFondo = '#f39c12'; // Naranja para visitado
+        colorBorde = '#d68910';
+        colorTexto = '#ffffff';
+      } else if (nodo.procesado) {
+        colorFondo = '#9b59b6'; // Púrpura para procesado (Dijkstra)
+        colorBorde = '#8e44ad';
+      } else if (nodo.resaltado) {
+        colorFondo = '#e74c3c'; // Rojo para resaltado
+        colorBorde = '#c0392b';
+      }
+
+      // Dibujar sombra más pronunciada
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.beginPath();
+      ctx.arc(x + 3, y + 3, radioNodo, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Dibujar nodo con gradiente (simulado con círculos concéntricos)
+      // Círculo exterior (borde)
+      ctx.fillStyle = colorBorde;
+      ctx.beginPath();
+      ctx.arc(x, y, radioNodo, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Círculo interior
+      ctx.fillStyle = colorFondo;
+      ctx.beginPath();
+      ctx.arc(x, y, radioNodo - 3, 0, 2 * Math.PI);
+      ctx.fill();
+      
+      // Highlight en la parte superior
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+      ctx.beginPath();
+      ctx.arc(x - 5, y - 5, radioNodo / 3, 0, 2 * Math.PI);
+      ctx.fill();
+
+      // Dibujar valor del nodo
+      ctx.fillStyle = colorTexto;
+      ctx.font = 'bold 16px Arial';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
+      ctx.lineWidth = 3;
+      ctx.strokeText(nodo.valor.toString(), x, y);
+      ctx.fillText(nodo.valor.toString(), x, y);
+
+      // Mostrar distancia si está disponible (para Dijkstra)
+      if (nodo.distancia !== undefined && nodo.distancia !== Infinity && grafo.tipoRecorrido === 'dijkstra') {
+        ctx.fillStyle = '#2c3e50';
+        ctx.font = 'bold 16px Arial';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.8)';
+        ctx.lineWidth = 2;
+        ctx.strokeText(`d:${nodo.distancia}`, x, y + radioNodo + 18);
+        ctx.fillText(`d:${nodo.distancia}`, x, y + radioNodo + 18);
+      }
+
+      ctx.restore();
+    });
+
+    return yInicio + alturaMaxima + 80;
   };
 
   const dibujarArbol = (ctx, arbol, startY, canvasWidth, alturaMaxima) => {
@@ -129,7 +381,7 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     }
     
     // Calcular posiciones del árbol de manera centrada
-    const radioNodo = arbol.radioNodo || 25;
+    const radioNodo = 40; // ← forzar el tamaño del nodo, sin importar lo que venga en arbol
     const centroX = canvasWidth / 2;
     const inicioY = y + 30;
     
@@ -294,8 +546,7 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     
     // Dibujar valor del nodo
     ctx.fillStyle = colorTexto;
-    const fontSize = Math.max(12, Math.min(18, radio * 0.6));
-    ctx.font = `bold ${fontSize}px Arial`;
+    ctx.font = `bold 28px Arial`;
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
     
@@ -306,14 +557,14 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     // Dibujar indicador especial para nodo encontrado
     if (nodo.encontrado) {
       ctx.fillStyle = '#17a2b8';
-      ctx.font = 'bold 12px Arial';
+      ctx.font = 'bold 25px Arial';
       ctx.fillText('●', x + radio + 10, y - radio);
     }
     
     // Dibujar número de orden para recorridos
     if (nodo.visitado && nodo.ordenVisita !== undefined) {
       ctx.fillStyle = '#28a745';
-      ctx.font = 'bold 10px Arial';
+      ctx.font = 'bold 20px Arial';
       ctx.fillText(nodo.ordenVisita.toString(), x - radio - 10, y - radio - 10);
     }
     
@@ -330,7 +581,7 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     
     ctx.save();
     ctx.strokeStyle = color;
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 6;
     
     ctx.beginPath();
     ctx.moveTo(x1, y1);
@@ -352,8 +603,8 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     ctx.save();
     
     // Fondo de la leyenda
-    const legendWidth = 400;
-    const legendHeight = 60;
+    const legendWidth = 750;
+    const legendHeight = 70;
     const legendX = (canvasWidth - legendWidth) / 2;
     const legendY = startY;
     
@@ -365,7 +616,7 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     
     // Título de la leyenda
     ctx.fillStyle = '#495057';
-    ctx.font = 'bold 14px Arial';
+    ctx.font = 'bold 20px Arial';
     ctx.textAlign = 'center';
     ctx.fillText('Estados de los Nodos', canvasWidth / 2, legendY + 15);
     
@@ -375,23 +626,29 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
       const itemX = legendX + (index * itemWidth) + (itemWidth / 2);
       const itemY = legendY + 35;
       
-      // Círculo pequeño
+      // Desfase vertical que baja los círculos
+      const desplazamientoY = 7; // Ajusta este valor si quieres bajarlos más o menos
+
+// Círculo de color (relleno)
       ctx.fillStyle = item.color;
       ctx.beginPath();
-      ctx.arc(itemX - 15, itemY, 8, 0, 2 * Math.PI);
+      ctx.arc(itemX - 15, itemY + desplazamientoY, 8, 0, 2 * Math.PI); // Bajado
       ctx.fill();
-      
+
+      // Círculo de borde
       ctx.strokeStyle = item.border;
-      ctx.lineWidth = 2;
+      ctx.lineWidth = 4;
       ctx.beginPath();
-      ctx.arc(itemX - 15, itemY, 8, 0, 2 * Math.PI);
+      ctx.arc(itemX - 15, itemY + desplazamientoY, 8, 0, 2 * Math.PI); // Bajado
       ctx.stroke();
-      
-      // Texto
+
+      // Texto (queda en la línea base original)
       ctx.fillStyle = item.textColor;
-      ctx.font = '11px Arial';
+      ctx.font = '14px Arial';
       ctx.textAlign = 'left';
-      ctx.fillText(item.text, itemX - 5, itemY + 1);
+      ctx.textBaseline = 'alphabetic'; // Línea base normal de texto
+      ctx.fillText(item.text, itemX + -2, itemY + 12); // No se cambia
+
     });
     
     ctx.restore();
@@ -443,9 +700,9 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     
     // CORRECCIÓN PRINCIPAL: Calcular dimensiones correctamente
     const numNodos = lista.nodos.length;
-    const anchoNodo = 180; // Ancho fijo para consistencia
-    const espacioEntre = 80; // Espacio fijo entre nodos
-    const altoNodo = Math.max(70, Math.min(90, alturaMaxima * 0.5));
+    const anchoNodo = 220; // Ancho fijo para consistencia
+    const espacioEntre = 220; // Espacio fijo entre nodos
+    const altoNodo = Math.max(90, Math.min(110, alturaMaxima * 0.6));
     
     // Calcular el ancho total necesario
     const totalAncho = numNodos * anchoNodo + (numNodos - 1) * espacioEntre;
@@ -466,7 +723,7 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     const inicioX = Math.max(margen, (canvasWidth - totalAnchoFinal) / 2);
     
     // Calcular tamaños de fuente adaptativos
-    const fontSizeValor = Math.max(14, Math.min(20, anchoNodoFinal * 0.12));
+   const fontSizeValor = 28; // Tamaño fijo grande
     const fontSizeFlecha = Math.max(12, Math.min(16, espacioEntreFinal * 0.15));
     
     // USAR SOLO POSICIONES CALCULADAS (no animación)
@@ -579,25 +836,25 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     
     // Sección anterior
     ctx.fillStyle = esPrimero ? '#e74c3c' : colorSecundario;
-    ctx.font = `${Math.max(10, fontSize - 2)}px Arial`;
+    ctx.font = `${fontSize - 4}px Arial`;
     ctx.fillText(
-      esPrimero ? 'NULL' : '←', 
+      esPrimero ? 'NULL' : '🡨', 
       x + anchoSeccion / 2, 
       y + alto / 2
     );
     
     // Sección del valor
     ctx.fillStyle = colorTexto;
-    ctx.font = `bold ${Math.max(12, fontSize)}px Arial`;
+    ctx.font = `bold ${fontSize}px Arial`; // antes: Math.max(12, fontSize)
     const valorTexto = nodo.valor !== undefined && nodo.valor !== null ? nodo.valor.toString() : '';
     const valorRecortado = valorTexto.length > 6 ? valorTexto.substring(0, 6) + '...' : valorTexto;
     ctx.fillText(valorRecortado, x + anchoSeccion + anchoSeccion / 2, y + alto / 2);
     
     // Sección siguiente
     ctx.fillStyle = esUltimo ? '#e74c3c' : colorSecundario;
-    ctx.font = `${Math.max(10, fontSize - 2)}px Arial`;
+    ctx.font = `${fontSize - 4}px Arial`; // antes: Math.max(10, fontSize - 2)
     ctx.fillText(
-      esUltimo ? 'NULL' : '→', 
+      esUltimo ? 'NULL' : '🡪', 
       x + 2 * anchoSeccion + anchoSeccion / 2, 
       y + alto / 2
     );
@@ -626,12 +883,12 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     ctx.save();
     
     const separacion = 15;
-    const longitudFlecha = 12;
-    const anchoFlecha = 6;
+    const longitudFlecha = 17;
+    const anchoFlecha = 9;
     const colorFlecha = '#3498db';
     const colorFlechaRetorno = '#9b59b6';
     
-    ctx.lineWidth = 2;
+    ctx.lineWidth = 5;
     
     // Flecha hacia adelante (arriba) - NEXT
     const yAdelante = y1 - separacion;
@@ -655,7 +912,7 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     
     // Etiqueta "next"
     ctx.fillStyle = colorFlecha;
-    ctx.font = `${Math.max(10, fontSize - 2)}px Arial`;
+    ctx.font = `${Math.max(28, fontSize)}px Arial`;
     ctx.textAlign = 'center';
     ctx.fillText('next', (x1 + x2) / 2, yAdelante - 12);
     
@@ -681,7 +938,7 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
     
     // Etiqueta "prev"
     ctx.fillStyle = colorFlechaRetorno;
-    ctx.font = `${Math.max(10, fontSize - 2)}px Arial`;
+    ctx.font = `${Math.max(28, fontSize)}px Arial`;
     ctx.textAlign = 'center';
     ctx.fillText('prev', (x1 + x2) / 2, yAtras + 18);
     

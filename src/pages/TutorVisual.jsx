@@ -1,4 +1,4 @@
-// TutorVisual.jsx - Versión completa con soporte para listas y árboles
+// TutorVisual.jsx - Versión integrada con indicador de línea actual
 import React, { useState, useEffect } from 'react';
 import { driver } from "driver.js";
 import "driver.js/dist/driver.css";
@@ -21,6 +21,31 @@ import './tutor.css';
 
 // Estructuras disponibles incluyendo árboles
 const estructuras = ['Vector', 'Matriz', 'Pila', 'Cola', 'Lista', 'Arboles', 'Grafos'];
+
+// Función para calcular la línea actual basada en el paso
+const calcularLineaActual = (codigo, pasoActual) => {
+  if (!codigo || !pasoActual) return null;
+  
+  const lineas = codigo.split('\n');
+  const lineasEjecutable = lineas
+    .map((linea, index) => ({
+      numero: index + 1,
+      contenido: linea.trim()
+    }))
+    .filter(linea => 
+      linea.contenido && 
+      !linea.contenido.startsWith('//') && 
+      !linea.contenido.startsWith('/*') &&
+      linea.contenido !== '{'  &&
+      linea.contenido !== '}'
+    );
+  
+  if (pasoActual <= lineasEjecutable.length) {
+    return lineasEjecutable[pasoActual - 1].numero;
+  }
+  
+  return null;
+};
 
 const TutorVisual = () => {
   const [estructuraSeleccionada, setEstructuraSeleccionada] = useState('');
@@ -47,9 +72,186 @@ const TutorVisual = () => {
     }
   }, [primeraVez]);
 
+  // Efecto para mostrar consejo cuando cambia la estructura seleccionada
+  useEffect(() => {
+    if (estructuraSeleccionada && mostrarConsejos) {
+      console.log(`Efecto: Mostrando consejo para estructura: ${estructuraSeleccionada}`); // Debug
+      setTimeout(() => {
+        mostrarConsejoEducativo('seleccion', '.selector-estructura', estructuraSeleccionada);
+      }, 300); // Delay más largo para asegurar que el DOM se actualice
+    }
+  }, [estructuraSeleccionada, mostrarConsejos]); // Dependencias del efecto
+
+  // Función para obtener consejo educativo usando condicionales if
+  const obtenerConsejoEducativo = (estructura, tipo) => {
+    if (!estructura || !tipo) return null;
+
+    // Consejos para Vector
+    if (estructura === 'Vector') {
+      if (tipo === 'seleccion') {
+        return {
+          titulo: '💡 Consejo sobre Vectores',
+          descripcion: 'Los vectores son perfectos para acceso rápido por índice O(1). Ideales cuando necesitas acceder frecuentemente a elementos por posición específica.'
+        };
+      } else if (tipo === 'codigo') {
+        return {
+          titulo: '🎯 Tip de programación',
+          descripcion: 'Prueba operaciones como: arr[i] = valor (asignación), arr.length (tamaño), o bucles for para recorrer todos los elementos.'
+        };
+      } else if (tipo === 'ejecucion') {
+        return {
+          titulo: '⚡ Optimización',
+          descripcion: 'Los vectores usan memoria contigua, lo que los hace muy eficientes para operaciones matemáticas y procesamiento de datos grandes.'
+        };
+      }
+    }
+
+    // Consejos para Matriz
+    if (estructura === 'Matriz') {
+      if (tipo === 'seleccion') {
+        return {
+          titulo: '💡 Consejo sobre Matrices',
+          descripcion: 'Las matrices son vectores bidimensionales. Perfectas para representar tablas, imágenes, o problemas de programación dinámica.'
+        };
+      } else if (tipo === 'codigo') {
+        return {
+          titulo: '🎯 Tip de programación',
+          descripcion: 'Para matrices, siempre ten en cuenta las dimensiones: mat[fila][columna]. Usa bucles anidados para recorrer todos los elementos.'
+        };
+      } else if (tipo === 'ejecucion') {
+        return {
+          titulo: '⚡ Consideración de rendimiento',
+          descripcion: 'Al recorrer matrices, es más eficiente hacerlo fila por fila debido a la localidad de referencia en memoria.'
+        };
+      }
+    }
+
+    // Consejos para Pila
+    if (estructura === 'Pila') {
+      if (tipo === 'seleccion') {
+        return {
+          titulo: '💡 Consejo sobre Pilas (Stack)',
+          descripcion: 'Las pilas siguen LIFO: Last In, First Out. Imagina una pila de platos: solo puedes tomar el de arriba. Útiles para parsing, undo/redo.'
+        };
+      } else if (tipo === 'codigo') {
+        return {
+          titulo: '🎯 Tip de programación',
+          descripcion: 'Operaciones principales: push(elemento) para agregar, pop() para quitar y obtener, peek()/top() para ver sin quitar.'
+        };
+      } else if (tipo === 'ejecucion') {
+        return {
+          titulo: '⚡ Casos de uso',
+          descripcion: 'Las pilas son fundamentales en recursión, navegación de páginas web, y evaluación de expresiones matemáticas.'
+        };
+      }
+    }
+
+    // Consejos para Cola
+    if (estructura === 'Cola') {
+      if (tipo === 'seleccion') {
+        return {
+          titulo: '💡 Consejo sobre Colas (Queue)',
+          descripcion: 'Las colas siguen FIFO: First In, First Out. Como una fila en el banco: quien llega primero, se atiende primero.'
+        };
+      } else if (tipo === 'codigo') {
+        return {
+          titulo: '🎯 Tip de programación',
+          descripcion: 'Operaciones básicas: enqueue(elemento) para agregar al final, dequeue() para quitar del frente, front() para ver el primero.'
+        };
+      } else if (tipo === 'ejecucion') {
+        return {
+          titulo: '⚡ Aplicaciones prácticas',
+          descripcion: 'Las colas son esenciales en sistemas operativos (procesos), redes (buffers), y algoritmos de búsqueda como BFS.'
+        };
+      }
+    }
+
+    // Consejos para Lista
+    if (estructura === 'Lista') {
+      if (tipo === 'seleccion') {
+        return {
+          titulo: '💡 Consejo sobre Listas Enlazadas',
+          descripcion: 'Las listas enlazadas permiten inserción/eliminación eficiente en cualquier posición, pero requieren recorrido secuencial para acceso.'
+        };
+      } else if (tipo === 'codigo') {
+        return {
+          titulo: '🎯 Tip de programación',
+          descripcion: 'Operaciones útiles: insertarInicio(), insertarFinal(), insertarEn(pos, elem), eliminarInicio(), eliminarEn(pos).'
+        };
+      } else if (tipo === 'ejecucion') {
+        return {
+          titulo: '⚡ Ventaja clave',
+          descripcion: 'A diferencia de los arrays, las listas crecen dinámicamente sin desperdiciar memoria y permiten inserción O(1) al inicio.'
+        };
+      }
+    }
+
+    // Consejos para Arboles
+    if (estructura === 'Arboles') {
+      if (tipo === 'seleccion') {
+        return {
+          titulo: '💡 Consejo sobre Árboles Binarios',
+          descripcion: 'Los árboles binarios organizan datos jerárquicamente. Cada nodo tiene máximo 2 hijos: izquierdo (menor) y derecho (mayor).'
+        };
+      } else if (tipo === 'codigo') {
+        return {
+          titulo: '🎯 Tip de programación',
+          descripcion: 'Operaciones principales: insertar(valor), buscar(valor), inorder(), preorder(), postorder() para diferentes recorridos.'
+        };
+      } else if (tipo === 'ejecucion') {
+        return {
+          titulo: '⚡ Eficiencia increíble',
+          descripcion: 'En un árbol balanceado, búsqueda, inserción y eliminación son O(log n) - mucho más rápido que listas para conjuntos grandes.'
+        };
+      }
+    }
+
+    // Consejos para Grafos
+    if (estructura === 'Grafos') {
+      if (tipo === 'seleccion') {
+        return {
+          titulo: '💡 Consejo sobre Grafos',
+          descripcion: 'Los grafos modelan relaciones complejas entre elementos. Cada nodo puede conectarse con múltiples nodos a través de aristas.'
+        };
+      } else if (tipo === 'codigo') {
+        return {
+          titulo: '🎯 Tip de programación',
+          descripcion: 'Operaciones base: agregarNodo(id), agregarArista(origen, destino, peso), bfs(inicio), dfs(inicio), dijkstra(origen, destino).'
+        };
+      } else if (tipo === 'ejecucion') {
+        return {
+          titulo: '⚡ Aplicaciones poderosas',
+          descripcion: 'Los grafos resuelven problemas de redes sociales, rutas de navegación, dependencias de tareas, y optimización de caminos.'
+        };
+      }
+    }
+
+    // Si no se encuentra la estructura o tipo, retornar null
+    return null;
+  };
+
+  // Función mejorada para mostrar consejo educativo específico
+  const mostrarConsejoEducativo = (tipo, elemento = '.code-editor', estructuraEspecifica = null) => {
+    // Usar la estructura específica pasada como parámetro, o la seleccionada actualmente
+    const estructura = estructuraEspecifica || estructuraSeleccionada;
+    
+    if (!estructura || !mostrarConsejos) return;
+    
+    console.log(`Mostrando consejo para estructura: ${estructura}, tipo: ${tipo}`); // Debug
+    
+    const consejo = obtenerConsejoEducativo(estructura, tipo);
+    if (consejo) {
+      setTimeout(() => {
+        mostrarConsejo(elemento, consejo.titulo, consejo.descripcion);
+      }, 100);
+    }
+  };
+
   // Función para manejar cambio de estructura
   const handleEstructuraChange = (e) => {
     const nuevaEstructura = e.target.value;
+    console.log(`Cambiando estructura a: ${nuevaEstructura}`); // Debug
+    
     setEstructuraSeleccionada(nuevaEstructura);
     
     // Reiniciar el intérprete cuando cambia la estructura
@@ -62,6 +264,12 @@ const TutorVisual = () => {
         setCodigo('int arr = new int[5];\narr[0] = 10;\narr[1] = 20;\narr[2] = 30;');
     } else if (nuevaEstructura === 'Matriz') {
         setCodigo('int mat = new int[3][3];\nmat[0][0] = 1;\nmat[1][1] = 5;\nmat[2][2] = 9;');
+    } else if (nuevaEstructura === 'Pila') {
+        // Código de ejemplo para pila
+        setCodigo('Pila miPila = new Pila();\nmiPila.push(10);\nmiPila.push(20);\nmiPila.push(30);\nmiPila.pop();\nmiPila.peek();');
+    } else if (nuevaEstructura === 'Cola') {
+        // Código de ejemplo para cola
+        setCodigo('Cola miCola = new Cola();\nmiCola.enqueue(10);\nmiCola.enqueue(20);\nmiCola.enqueue(30);\nmiCola.dequeue();\nmiCola.front();');
     } else if (nuevaEstructura === 'Lista') {
         // Código de ejemplo para lista doblemente enlazada
         setCodigo(`ListaDoble miLista = new ListaDoble();
@@ -83,32 +291,39 @@ BOF.insertar(70);
 BOF.insertar(90);
 BOF.buscar(40);
 BOF.inorder();`);
+    } 
+    else if (nuevaEstructura === 'Grafos') {
+        // Código de ejemplo para grafos
+        setCodigo(`Grafo miGrafo = new Grafo(false);
+miGrafo.agregarNodo("A");
+miGrafo.agregarNodo("B");
+miGrafo.agregarNodo("C");
+miGrafo.agregarNodo("D");
+miGrafo.agregarNodo("E");
+miGrafo.agregarArista("A", "B", 2);
+miGrafo.agregarArista("A", "C", 3);
+miGrafo.agregarArista("B", "D", 1);
+miGrafo.agregarArista("C", "D", 4);
+miGrafo.agregarArista("D", "E", 2);
+miGrafo.bfs("A");
+miGrafo.dfs("A");
+miGrafo.dijkstra("A", "E");`);
     } else {
         setCodigo('');
     }
     
-    if (nuevaEstructura && mostrarConsejos) {
-      setTimeout(() => {
-        mostrarConsejo(
-          '.code-editor',
-          `¡Genial! Has seleccionado ${nuevaEstructura}`,
-          `Ahora puedes empezar a programar operaciones específicas para ${nuevaEstructura}. ¡Manos a la obra!`
-        );
-      }, 500);
-    }
+    // El consejo se mostrará automáticamente a través del useEffect
+    // que escucha los cambios en estructuraSeleccionada
   };
 
   // Función para ejecutar código completo
   const handleEjecutar = () => {
     if (!codigo.trim()) {
-      if (mostrarConsejos) {
-        mostrarConsejo(
-          '.code-editor',
-          'Código vacío',
-          'Escribe algo de código antes de ejecutar. ¡No seas tímido, experimenta!'
-        );
+      if (mostrarConsejos && estructuraSeleccionada) {
+        mostrarConsejoEducativo('codigo');
+      } else {
+        setMensajeEjecutor('Error: No hay código para ejecutar');
       }
-      setMensajeEjecutor('Error: No hay código para ejecutar');
       return;
     }
     
@@ -116,8 +331,8 @@ BOF.inorder();`);
       if (mostrarConsejos) {
         mostrarConsejo(
           '.selector-estructura',
-          'Selecciona una estructura',
-          'Primero elige qué estructura de datos quieres usar para tu código.'
+          '🎯 Primero selecciona una estructura',
+          'Elige qué estructura de datos quieres usar. Cada una tiene características únicas y casos de uso específicos.'
         );
       }
       setMensajeEjecutor('Error: Selecciona una estructura de datos');
@@ -133,11 +348,26 @@ BOF.inorder();`);
       setModoEjecucion('completo');
       setMensajeEjecutor('Código ejecutado exitosamente');
       
+      // Mostrar consejo sobre la ejecución
+      if (mostrarConsejos) {
+        mostrarConsejoEducativo('ejecucion', '.visualization-panel');
+      }
+      
       console.log("Resultado de ejecución:", resultado);
       
     } catch (error) {
       setMensajeEjecutor(`Error en la ejecución: ${error.message}`);
       console.error("Error al ejecutar código:", error);
+      
+      if (mostrarConsejos) {
+        setTimeout(() => {
+          mostrarConsejo(
+            '.code-editor',
+            '🐛 Error en el código',
+            'Revisa la sintaxis: verifica paréntesis, comillas, y que las operaciones sean válidas para la estructura seleccionada.'
+          );
+        }, 1000);
+      }
     }
   };
 
@@ -151,13 +381,13 @@ BOF.inorder();`);
     if (mostrarConsejos) {
       mostrarConsejo(
         '.info-panel',
-        'Reiniciado',
-        'El código y la visualización han sido reiniciados. ¡Listo para un nuevo intento!'
+        '🔄 Reinicio completo',
+        'Perfecto para experimentar con diferentes algoritmos. ¡El aprendizaje viene de la práctica constante!'
       );
     }
   };
 
-  // Función para paso anterior
+  // Función para paso anterior - VERSIÓN ACTUALIZADA
   const handleAnterior = () => {
     if (!estadoVisualizacion) {
       setMensajeEjecutor('Primero debes ejecutar el código');
@@ -174,8 +404,23 @@ BOF.inorder();`);
       
       const resultado = interprete.ejecutarPasoAnterior();
       if (resultado) {
+        // Si el interpretador no devuelve lineaActual, calcularla
+        if (!resultado.lineaActual) {
+          resultado.lineaActual = calcularLineaActual(codigo, resultado.pasoActual);
+        }
+        
         setEstadoVisualizacion(resultado);
         setMensajeEjecutor(`Paso anterior ejecutado. Paso ${resultado.pasoActual}/${resultado.totalPasos}`);
+        
+        if (mostrarConsejos && resultado.pasoActual === 1) {
+          setTimeout(() => {
+            mostrarConsejo(
+              '.button-group:last-of-type',
+              '🔍 Navegando por los pasos',
+              'Perfecto para revisar cada paso del algoritmo. La línea resaltada muestra qué se ejecutó.'
+            );
+          }, 500);
+        }
       } else {
         setMensajeEjecutor('No hay pasos anteriores disponibles');
       }
@@ -185,7 +430,7 @@ BOF.inorder();`);
     }
   };
 
-  // Función para paso siguiente
+  // Función para paso siguiente - VERSIÓN ACTUALIZADA
   const handleSiguiente = () => {
     if (!codigo.trim()) {
       setMensajeEjecutor('Error: No hay código para ejecutar');
@@ -202,10 +447,35 @@ BOF.inorder();`);
       
       const resultado = interprete.ejecutarSiguientePaso();
       if (resultado) {
+        // Si el interpretador no devuelve lineaActual, calcularla
+        if (!resultado.lineaActual) {
+          resultado.lineaActual = calcularLineaActual(codigo, resultado.pasoActual);
+        }
+        
         setEstadoVisualizacion(resultado);
         setMensajeEjecutor(`Paso ejecutado. Paso ${resultado.pasoActual}/${resultado.totalPasos}`);
+        
+        if (mostrarConsejos && resultado.pasoActual === 1) {
+          setTimeout(() => {
+            mostrarConsejo(
+              '.visualization-panel',
+              '👀 Observa los cambios',
+              'Fíjate cómo cada línea de código modifica la estructura. La flecha ▶️ te indica dónde estás.'
+            );
+          }, 500);
+        }
       } else {
         setMensajeEjecutor('No hay más pasos para ejecutar');
+        
+        if (mostrarConsejos) {
+          setTimeout(() => {
+            mostrarConsejo(
+              '.info-panel',
+              '🎉 Ejecución completada',
+              '¡Excelente! Has visto todo el proceso paso a paso. Modifica el código y prueba de nuevo.'
+            );
+          }, 500);
+        }
       }
       
     } catch (error) {
@@ -213,10 +483,74 @@ BOF.inorder();`);
     }
   };
 
-  // Función para alternar el estado de los consejos
-  const toggleConsejos = () => {
-    setMostrarConsejos(!mostrarConsejos);
+// Efecto para manejar atajos de teclado
+useEffect(() => {
+  const manejarTeclas = (event) => {
+    // Solo procesar si no estamos escribiendo en un input/textarea
+    if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
+      return;
+    }
+    
+    // Prevenir el comportamiento por defecto para nuestras teclas
+    const teclasEspeciales = ['Enter', 'ArrowLeft', 'ArrowRight', 'F1'];
+    if (teclasEspeciales.includes(event.key) || 
+        (event.key.toLowerCase() === 'r' || event.key.toLowerCase() === 'c')) {
+      event.preventDefault();
+    }
+ 
+    switch (event.key) {
+      case 'Enter':
+        // Enter para ejecutar
+        handleEjecutar();
+        break;
+      case 'r':
+      case 'R':
+        // R para reiniciar
+        handleReiniciar();
+        break;
+      case 'ArrowLeft':
+        // Flecha izquierda para paso anterior
+        handleAnterior();
+        break;
+      case 'ArrowRight':
+        // Flecha derecha para paso siguiente
+        handleSiguiente();
+        break;
+      case 'c':
+      case 'C':
+        // C para activar/desactivar consejos
+        toggleConsejos();
+        break;
+    }
   };
+
+  // Agregar el event listener
+  document.addEventListener('keydown', manejarTeclas);
+  
+  // Cleanup: remover el event listener cuando el componente se desmonte
+  return () => {
+    document.removeEventListener('keydown', manejarTeclas);
+  };
+}, [codigo, estructuraSeleccionada, estadoVisualizacion, modoEjecucion,mostrarConsejos]);
+  // Función para alternar el estado de los consejos
+const toggleConsejos = () => {
+  const nuevoEstado = !mostrarConsejos;
+  setMostrarConsejos(nuevoEstado);
+  
+  if (nuevoEstado) {
+    setTimeout(() => {
+      mostrarConsejo(
+        '.consejos-switch-container',
+        '💡 ¡Consejos activados!',
+        'Ahora recibirás tips educativos mientras trabajas. Estos consejos te ayudarán a entender mejor cada estructura de datos.'
+      );
+    }, 500);
+  } else {
+    // Feedback cuando se desactivan los consejos
+    setMensajeEjecutor('💡 Consejos desactivados - Presiona F1 para reactivarlos');
+    setTimeout(() => setMensajeEjecutor(''), 2000);
+  }
+};
 
   // Función para obtener la descripción del estado actual
   const obtenerDescripcion = () => {
@@ -272,8 +606,7 @@ BOF.inorder();`);
     
     return "Selecciona una estructura de datos y escribe código para ver la visualización aquí.";
   };
-
-  // Función para obtener operaciones disponibles según la estructura
+   // Efecto para manejar atajos de teclado
   
   return (
     <div className="container-fluid tutor-container">
@@ -298,7 +631,7 @@ BOF.inorder();`);
                 </span>
               </label>
               <span className="consejos-label">
-                {mostrarConsejos ? 'Consejos activados' : 'Consejos desactivados'}
+                {mostrarConsejos ? 'Consejos educativos activados' : 'Consejos desactivados'}
               </span>
             </div>
           </div>
@@ -315,10 +648,14 @@ BOF.inorder();`);
             />
           </div>
 
-          {/* Editor de código */}
+          {/* Editor de código con indicador de paso actual */}
           <EditorCodigo
             valor={codigo}
             onChange={(e) => setCodigo(e.target.value)}
+            lineaActual={estadoVisualizacion?.lineaActual}
+            modoEjecucion={modoEjecucion}
+            pasoActual={estadoVisualizacion?.pasoActual || 0}
+            totalPasos={estadoVisualizacion?.totalPasos || 0}
           />
 
           {/* Botones de acción */}
@@ -336,6 +673,12 @@ BOF.inorder();`);
                 Modo: {modoEjecucion === 'completo' ? 'Ejecución completa' : 'Paso a paso'}
                 <br />
                 Paso: {estadoVisualizacion.pasoActual}/{estadoVisualizacion.totalPasos}
+                {estadoVisualizacion.lineaActual && (
+                  <>
+                    <br />
+                    Línea actual: {estadoVisualizacion.lineaActual}
+                  </>
+                )}
                 {estadoVisualizacion.estructuras && estructuraSeleccionada === 'Arboles' && (
                   <>
                     <br />
@@ -358,19 +701,6 @@ BOF.inorder();`);
           <PanelInformacion 
             descripcion={obtenerDescripcion()}
           />
-
-          {/* Panel de ayuda contextual para árboles */}
-          {estructuraSeleccionada === 'Arboles' && (
-            <div className="mt-3 p-3 bg-light rounded">
-              <h6>💡 Consejos para Árboles Binarios:</h6>
-              <ul className="mb-0">
-                <li><small>Los valores menores van al hijo izquierdo</small></li>
-                <li><small>Los valores mayores van al hijo derecho</small></li>
-                <li><small>Los recorridos muestran diferentes órdenes de visita</small></li>
-                <li><small>La búsqueda resalta el camino hasta el nodo encontrado</small></li>
-              </ul>
-            </div>
-          )}
         </div>
       </div>
     </div>

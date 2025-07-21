@@ -1,15 +1,17 @@
-// InterpretadorEstructuras.js - Actualizado con soporte para árboles
+// InterpretadorEstructuras.js - Actualizado con soporte para árboles y grafos
 import VectorVisual from './VectorVisual.js';
 import MatrizVisual from './MatrizVisual.js';
 import ListaVisual from './ListaVisual.js';
 import ArbolVisual from './ArbolVisual.js';
+import GrafoVisual from './GrafoVisual.js';
 
 class InterpretadorEstructuras {
     constructor() {
         this.vectores = {};
         this.matrices = {};
         this.listas = {};
-        this.arboles = {}; // Nueva estructura para árboles
+        this.arboles = {}; // Estructura para árboles
+        this.grafos = {}; // Nueva estructura para grafos
         this.historialDeshacer = [];
         this.pasoActual = 0;
         this.lineasCodigo = [];
@@ -28,6 +30,7 @@ class InterpretadorEstructuras {
         this.matrices = {};
         this.listas = {};
         this.arboles = {}; // Limpiar árboles también
+        this.grafos = {}; // Limpiar grafos también
         this.historialDeshacer = [];
     }
 
@@ -37,6 +40,7 @@ class InterpretadorEstructuras {
         this.matrices = {};
         this.listas = {};
         this.arboles = {}; // Limpiar árboles
+        this.grafos = {}; // Limpiar grafos
         this.historialDeshacer = [];
         this.pasoActual = 0;
         this.resultadoEjecucion = [];
@@ -49,6 +53,7 @@ class InterpretadorEstructuras {
         this.matrices = {};
         this.listas = {};
         this.arboles = {}; // Limpiar árboles
+        this.grafos = {}; // Limpiar grafos
         this.historialDeshacer = [];
         this.pasoActual = 0;
         this.resultadoEjecucion = [];
@@ -91,15 +96,19 @@ class InterpretadorEstructuras {
     ejecutarPaso(indicePaso) {
         const linea = this.lineasCodigo[indicePaso];
         
-        // Primero intenta con árboles (nuevo)
+        // Primero intenta con árboles (mantener orden original)
         const resultadoArbol = ArbolVisual.ejecutarPaso(linea, this.arboles, this.historialDeshacer);
         if (resultadoArbol) return resultadoArbol;
         
-        // Luego con matrices
+        // Luego con grafos (nuevo)
+        const resultadoGrafo = GrafoVisual.ejecutarPaso(linea, this.grafos, this.historialDeshacer);
+        if (resultadoGrafo) return resultadoGrafo;
+        
+        // Después con matrices
         const resultadoMatriz = MatrizVisual.ejecutarPaso(linea, this.matrices, this.historialDeshacer);
         if (resultadoMatriz) return resultadoMatriz;
         
-        // Después con listas
+        // Luego con listas
         const resultadoLista = ListaVisual.ejecutarPaso(linea, this.listas, this.historialDeshacer);
         if (resultadoLista) return resultadoLista;
         
@@ -117,9 +126,10 @@ class InterpretadorEstructuras {
         const matrices = Object.values(this.matrices).map(m => m.obtenerEstadoVisual());
         const listas = Object.values(this.listas).map(l => l.obtenerEstadoVisual());
         const arboles = Object.values(this.arboles).map(a => a.obtenerEstadoVisual()); // Incluir árboles
+        const grafos = Object.values(this.grafos).map(g => g.obtenerEstadoVisual()); // Incluir grafos
         
         return {
-            estructuras: [...vectores, ...matrices, ...listas, ...arboles],
+            estructuras: [...vectores, ...matrices, ...listas, ...arboles, ...grafos],
             pasoActual: this.pasoActual,
             totalPasos: this.lineasCodigo.length,
             resultadoEjecucion: this.resultadoEjecucion,
@@ -143,6 +153,9 @@ class InterpretadorEstructuras {
             case 'arbol binario':
             case 'arboles':
                 return Object.values(this.arboles).map(a => a.obtenerEstadoVisual());
+            case 'grafo':
+            case 'grafos':
+                return Object.values(this.grafos).map(g => g.obtenerEstadoVisual());
             default:
                 return [];
         }

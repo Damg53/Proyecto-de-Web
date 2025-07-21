@@ -2,14 +2,6 @@
 @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Inter:wght@300;400;500;600;700&display=swap');
 
 :root {
-    /* Colores principales */
-    --primary: #6366f1;
-    --primary-hover: #4f46e5;
-    --secondary: #8b5cf6;
-    --success: #10b981;
-    --warning: #f59e0b;
-    --danger: #ef4444;
-    
     /* Fondos */
     --dark-bg: #0f172a;
     --dark-card: #1e293b;
@@ -28,9 +20,10 @@
     --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
     
     /* Gradientes */
-    --gradient-primary: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-    --gradient-success: linear-gradient(135deg, #10b981 0%, #059669 100%);
-    --gradient-warning: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+--gradient-primary: linear-gradient(135deg, #0369a1 0%, #1e3a8a 100%);     /* Azul petróleo → azul oscuro */
+--gradient-success: linear-gradient(135deg, #15803d 0%, #065f46 100%);    /* Verde selva → verde pino */
+--gradient-warning: linear-gradient(135deg, #f43f5e 0%, #be123c 100%);     /* Rojo oscuro → vino tinto */
+
 }
 
 /* ===== RESET Y BASE ===== */
@@ -43,7 +36,8 @@
 body {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
     background: var(--dark-bg);
-    color: var(--text-primary);
+    font-size: 20px;
+    color:rgb(255, 255, 255);
     line-height: 1.6;
     overflow-x: hidden;
 }
@@ -143,7 +137,7 @@ body {
     margin-bottom: 2rem;
     background: var(--gradient-primary);
     -webkit-background-clip: text;
-    -webkit-text-fill-color: transparent;
+    -webkit-text-fill-color:rgb(18, 181, 202);
     background-clip: text;
     text-align: center;
 }
@@ -209,7 +203,7 @@ body {
     border: none;
     border-radius: 12px;
     font-weight: 500;
-    font-size: 0.9rem;
+    font-size: 1.2rem;
     cursor: pointer;
     transition: all 0.3s ease;
     display: inline-flex;
@@ -248,11 +242,11 @@ body {
 /* Variantes de botones */
 .btn-primary {
     background: var(--gradient-primary);
-    color: white;
+    color: rgb(255, 255, 255);
 }
 
 .btn-primary:hover {
-    background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #4f46e5 100%);
 }
 
 .btn-success {
@@ -261,7 +255,7 @@ body {
 }
 
 .btn-success:hover {
-    background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #047857 100%);
 }
 
 .btn-warning {
@@ -270,7 +264,7 @@ body {
 }
 
 .btn-warning:hover {
-    background: linear-gradient(135deg, #d97706 0%, #b45309 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #991b1b 100%);
 }
 
 .btn-secondary {
@@ -280,7 +274,7 @@ body {
 }
 
 .btn-secondary:hover {
-    background: rgba(71, 85, 105, 1);
+    background: rgb(46, 55, 68);
     border-color: var(--text-secondary);
 }
 
