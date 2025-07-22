@@ -7,6 +7,8 @@ import ArbolVisual from './ArbolVisual.js';
 import NodoArbol from './NodoArbol.js';         // Nueva importación
 import GrafoVisual from './GrafoVisual.js';
 import NodoGrafo from './NodoGrafo.js';
+import PilaVisual from './PilaVisual.js';
+import LibroAnimado from './LibroAnimado.js';
 import InterpretadorEstructuras from './InterpretadorEstructuras.js';
 
 export {
@@ -18,5 +20,7 @@ export {
     NodoArbol,
     GrafoVisual,
     NodoGrafo,
+    PilaVisual,
+    LibroAnimado,
     InterpretadorEstructuras
 };

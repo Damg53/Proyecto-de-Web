@@ -1,9 +1,10 @@
-// InterpretadorEstructuras.js - Actualizado con soporte para árboles y grafos
+// InterpretadorEstructuras.js - Actualizado con soporte para árboles, grafos y pilas
 import VectorVisual from './VectorVisual.js';
 import MatrizVisual from './MatrizVisual.js';
 import ListaVisual from './ListaVisual.js';
 import ArbolVisual from './ArbolVisual.js';
 import GrafoVisual from './GrafoVisual.js';
+import PilaVisual from './PilaVisual.js';
 
 class InterpretadorEstructuras {
     constructor() {
@@ -12,6 +13,7 @@ class InterpretadorEstructuras {
         this.listas = {};
         this.arboles = {}; // Estructura para árboles
         this.grafos = {}; // Nueva estructura para grafos
+        this.pilas = {}; // Soporte para pilas
         this.historialDeshacer = [];
         this.pasoActual = 0;
         this.lineasCodigo = [];
@@ -23,37 +25,37 @@ class InterpretadorEstructuras {
             .split('\n')
             .map(linea => linea.trim())
             .filter(linea => linea.length > 0 && !linea.startsWith('//'));
-        
+
         this.pasoActual = 0;
         this.resultadoEjecucion = [];
         this.vectores = {};
         this.matrices = {};
         this.listas = {};
-        this.arboles = {}; // Limpiar árboles también
-        this.grafos = {}; // Limpiar grafos también
+        this.arboles = {};
+        this.grafos = {};
+        this.pilas = {}; // Limpiar pilas también
         this.historialDeshacer = [];
     }
 
-    // Limpiar solo las estructuras sin afectar el código cargado
     limpiarEstructuras() {
         this.vectores = {};
         this.matrices = {};
         this.listas = {};
-        this.arboles = {}; // Limpiar árboles
-        this.grafos = {}; // Limpiar grafos
+        this.arboles = {};
+        this.grafos = {};
+        this.pilas = {};
         this.historialDeshacer = [];
         this.pasoActual = 0;
         this.resultadoEjecucion = [];
-        // Mantener this.lineasCodigo para preservar el código cargado
     }
 
-    // Limpiar todo completamente
     limpiarTodo() {
         this.vectores = {};
         this.matrices = {};
         this.listas = {};
-        this.arboles = {}; // Limpiar árboles
-        this.grafos = {}; // Limpiar grafos
+        this.arboles = {};
+        this.grafos = {};
+        this.pilas = {};
         this.historialDeshacer = [];
         this.pasoActual = 0;
         this.resultadoEjecucion = [];
@@ -62,12 +64,12 @@ class InterpretadorEstructuras {
 
     ejecutarTodo() {
         this.resultadoEjecucion = [];
-        
+
         for (let i = 0; i < this.lineasCodigo.length; i++) {
             const resultado = this.ejecutarPaso(i);
             this.resultadoEjecucion.push(resultado);
         }
-        
+
         this.pasoActual = this.lineasCodigo.length;
         return this.obtenerEstadoCompleto();
     }
@@ -95,28 +97,32 @@ class InterpretadorEstructuras {
 
     ejecutarPaso(indicePaso) {
         const linea = this.lineasCodigo[indicePaso];
-        
-        // Primero intenta con árboles (mantener orden original)
+
+        try {
+            PilaVisual.ejecutarPaso(linea, this.pilas, this.historialDeshacer);
+            if (this.seEjecutoPila(linea)) return `Operación de pila ejecutada: ${linea}`;
+        } catch (e) { console.warn('No es operación de pila:', e.message); }
+
         const resultadoArbol = ArbolVisual.ejecutarPaso(linea, this.arboles, this.historialDeshacer);
         if (resultadoArbol) return resultadoArbol;
-        
-        // Luego con grafos (nuevo)
+
         const resultadoGrafo = GrafoVisual.ejecutarPaso(linea, this.grafos, this.historialDeshacer);
         if (resultadoGrafo) return resultadoGrafo;
-        
-        // Después con matrices
+
         const resultadoMatriz = MatrizVisual.ejecutarPaso(linea, this.matrices, this.historialDeshacer);
         if (resultadoMatriz) return resultadoMatriz;
-        
-        // Luego con listas
+
         const resultadoLista = ListaVisual.ejecutarPaso(linea, this.listas, this.historialDeshacer);
         if (resultadoLista) return resultadoLista;
-        
-        // Finalmente con vector
+
         return VectorVisual.ejecutarPaso(linea, this.vectores, this.historialDeshacer);
     }
 
-    // Alias de limpiarTodo para mantener compatibilidad
+    seEjecutoPila(linea) {
+        const patrones = [/Pila\s+(\w+)\s*=\s*new\s+Pila/, /(\w+)\.push\(/, /(\w+)\.pop\(/, /(\w+)\.peek\(/, /(\w+)\.clear\(/];
+        return patrones.some(p => p.test(linea));
+    }
+
     reiniciar() {
         this.limpiarTodo();
     }
@@ -125,20 +131,26 @@ class InterpretadorEstructuras {
         const vectores = Object.values(this.vectores).map(v => v.obtenerEstadoVisual());
         const matrices = Object.values(this.matrices).map(m => m.obtenerEstadoVisual());
         const listas = Object.values(this.listas).map(l => l.obtenerEstadoVisual());
-        const arboles = Object.values(this.arboles).map(a => a.obtenerEstadoVisual()); // Incluir árboles
-        const grafos = Object.values(this.grafos).map(g => g.obtenerEstadoVisual()); // Incluir grafos
-        
+        const arboles = Object.values(this.arboles).map(a => a.obtenerEstadoVisual());
+        const grafos = Object.values(this.grafos).map(g => g.obtenerEstadoVisual());
+        const pilas = Object.values(this.pilas).map(p => ({
+            tipo: 'pila',
+            nombre: p.nombre,
+            elementos: p.elementos?.map(e => e.valor || e) || [],
+            posicion: p.posicionBase || { x: 0, y: 0 }
+        }));
+
         return {
-            estructuras: [...vectores, ...matrices, ...listas, ...arboles, ...grafos],
+            estructuras: [...vectores, ...matrices, ...listas, ...arboles, ...grafos, ...pilas],
             pasoActual: this.pasoActual,
             totalPasos: this.lineasCodigo.length,
             resultadoEjecucion: this.resultadoEjecucion,
             puedeAvanzar: this.pasoActual < this.lineasCodigo.length,
-            puedeRetroceder: this.pasoActual > 0
+            puedeRetroceder: this.pasoActual > 0,
+            pilas: this.pilas
         };
     }
 
-    // Obtener solo las estructuras del tipo especificado
     obtenerEstructurasPorTipo(tipo) {
         switch(tipo.toLowerCase()) {
             case 'vector':
@@ -156,6 +168,14 @@ class InterpretadorEstructuras {
             case 'grafo':
             case 'grafos':
                 return Object.values(this.grafos).map(g => g.obtenerEstadoVisual());
+            case 'pila':
+            case 'stack':
+                return Object.values(this.pilas).map(p => ({
+                    tipo: 'pila',
+                    nombre: p.nombre,
+                    elementos: p.elementos?.map(e => e.valor || e) || [],
+                    posicion: p.posicionBase || { x: 0, y: 0 }
+                }));
             default:
                 return [];
         }

@@ -261,23 +261,28 @@ const TutorVisual = () => {
     
     // Actualizar código de ejemplo según la estructura
     if (nuevaEstructura === 'Vector') {
-        setCodigo('int arr = new int[5];\narr[0] = 10;\narr[1] = 20;\narr[2] = 30;');
+        setCodigo('int BOF = new int[5];\nBOF[0] = 10;\nBOF[1] = 20;\nBOF[2] = 30;');
     } else if (nuevaEstructura === 'Matriz') {
-        setCodigo('int mat = new int[3][3];\nmat[0][0] = 1;\nmat[1][1] = 5;\nmat[2][2] = 9;');
+        setCodigo('int BOF = new int[3][3];\nBOF[0][0] = 1;\nBOF[1][1] = 5;\nBOF[2][2] = 9;');
     } else if (nuevaEstructura === 'Pila') {
-        // Código de ejemplo para pila
-        setCodigo('Pila miPila = new Pila();\nmiPila.push(10);\nmiPila.push(20);\nmiPila.push(30);\nmiPila.pop();\nmiPila.peek();');
+        // NUEVO: Código de ejemplo para pilas
+        setCodigo(`Pila BOF = new Pila();
+BOF.push("Libro1");
+BOF.push("Libro2");
+BOF.push("Libro3");
+BOF.pop();
+BOF.peek();`);
     } else if (nuevaEstructura === 'Cola') {
         // Código de ejemplo para cola
         setCodigo('Cola miCola = new Cola();\nmiCola.enqueue(10);\nmiCola.enqueue(20);\nmiCola.enqueue(30);\nmiCola.dequeue();\nmiCola.front();');
     } else if (nuevaEstructura === 'Lista') {
         // Código de ejemplo para lista doblemente enlazada
-        setCodigo(`ListaDoble miLista = new ListaDoble();
-miLista.insertarInicio("A");
-miLista.insertarFinal("B");
-miLista.insertarEn(1, "C");
-miLista.eliminarInicio();
-miLista.eliminarEn(0);`);
+        setCodigo(`ListaDoble BOF = new ListaDoble();
+BOF.insertarInicio("A");
+BOF.insertarFinal("B");
+BOF.insertarEn(1, "C");
+BOF.eliminarInicio();
+BOF.eliminarEn(0);`);
     } else if (nuevaEstructura === 'Arboles') {
         // Código de ejemplo para árbol binario
         setCodigo(`BOF = new ArbolBinario(); 
@@ -294,20 +299,20 @@ BOF.inorder();`);
     } 
     else if (nuevaEstructura === 'Grafos') {
         // Código de ejemplo para grafos
-        setCodigo(`Grafo miGrafo = new Grafo(false);
-miGrafo.agregarNodo("A");
-miGrafo.agregarNodo("B");
-miGrafo.agregarNodo("C");
-miGrafo.agregarNodo("D");
-miGrafo.agregarNodo("E");
-miGrafo.agregarArista("A", "B", 2);
-miGrafo.agregarArista("A", "C", 3);
-miGrafo.agregarArista("B", "D", 1);
-miGrafo.agregarArista("C", "D", 4);
-miGrafo.agregarArista("D", "E", 2);
-miGrafo.bfs("A");
-miGrafo.dfs("A");
-miGrafo.dijkstra("A", "E");`);
+        setCodigo(`Grafo BOF = new Grafo(false);
+BOF.agregarNodo("A");
+BOF.agregarNodo("B");
+BOF.agregarNodo("C");
+BOF.agregarNodo("D");
+BOF.agregarNodo("E");
+BOF.agregarArista("A", "B", 2);
+BOF.agregarArista("A", "C", 3);
+BOF.agregarArista("B", "D", 1);
+BOF.agregarArista("C", "D", 4);
+BOF.agregarArista("D", "E", 2);
+BOF.bfs("A");
+BOF.dfs("A");
+BOF.dijkstra("A", "E");`);
     } else {
         setCodigo('');
     }
@@ -457,11 +462,12 @@ miGrafo.dijkstra("A", "E");`);
         
         if (mostrarConsejos && resultado.pasoActual === 1) {
           setTimeout(() => {
-            mostrarConsejo(
-              '.visualization-panel',
-              '👀 Observa los cambios',
-              'Fíjate cómo cada línea de código modifica la estructura. La flecha ▶️ te indica dónde estás.'
-            );
+           mostrarConsejo(
+                  '.visualization-panel',
+                  '🧠 Comprende la lógica',
+                  'Observa cómo se transforma la estructura en cada paso. Todo cambio tiene una razón.'
+                );
+
           }, 500);
         }
       } else {
@@ -558,37 +564,6 @@ const toggleConsejos = () => {
       return mensajeEjecutor;
     }
     
-    if (estadoVisualizacion) {
-      const { estructuras, pasoActual, totalPasos } = estadoVisualizacion;
-      let descripcion = `Ejecutando ${estructuraSeleccionada}. `;
-      
-      if (modoEjecucion === 'paso_a_paso') {
-        descripcion += `Paso ${pasoActual}/${totalPasos}. `;
-      }
-      
-      if (estructuras.length > 0) {
-        // Información específica según el tipo de estructura
-        const nombres = estructuras.map(e => e.nombre).join(', ');
-        
-        if (estructuraSeleccionada === 'Arboles') {
-          const arbol = estructuras.find(e => e.tipo === 'arbol');
-          if (arbol) {
-            const numNodos = arbol.nodos ? arbol.nodos.length : 0;
-            descripcion += `Árbol '${arbol.nombre}' con ${numNodos} nodos`;
-          }
-        } else if (estructuraSeleccionada === 'Lista') {
-          const lista = estructuras.find(e => e.tipo === 'listaDoble');
-          if (lista) {
-            const numElementos = lista.elementos ? lista.elementos.length : 0;
-            descripcion += `Lista '${lista.nombre}' con ${numElementos} elementos`;
-          }
-        } else {
-          descripcion += `Estructuras en memoria: ${nombres}`;
-        }
-      }
-      
-      return descripcion;
-    }
     
     if (estructuraSeleccionada) {
       let mensaje = `Trabajando con ${estructuraSeleccionada}. `;
@@ -699,8 +674,10 @@ const toggleConsejos = () => {
           
           {/* Panel de información */}
           <PanelInformacion 
-            descripcion={obtenerDescripcion()}
-          />
+          descripcion={obtenerDescripcion()}
+          estadoVisualizacion={estadoVisualizacion}
+          estructuraSeleccionada={estructuraSeleccionada}
+        />
         </div>
       </div>
     </div>

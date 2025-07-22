@@ -884,3 +884,36 @@ body {
     font-size: 12px;
   }
 }
+
+/* ===== PANEL DE TEORÍA - TEXTO UNIFORME ===== */
+
+
+.teoria-panel h6 {
+    color: #12b5cb;
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+/* IMPORTANTE: Hacer que todo el texto de teoría tenga el mismo tamaño */
+.teoria-panel p,
+.teoria-panel small {
+    font-size: 1.1rem !important;  /* Mismo tamaño que step-info p */
+    line-height: 1.6 !important;
+    color: var(--text-secondary);
+    margin-bottom: 0.60rem;
+}
+
+/* Mantener el estilo visual pero con tamaño uniforme */
+.teoria-panel p strong {
+    color: #10b981;
+    font-weight: 600;
+}
+
+.teoria-panel .text-success strong {
+    color: #10b981;
+    font-size: 1.1rem !important;
+}
