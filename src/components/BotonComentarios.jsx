@@ -1,12 +1,21 @@
 import React, { useState } from 'react';
 
-const BotonComentarios = () => {
+const SistemaComentarios = () => {
+  // Estados para comentarios
   const [nombre, setNombre] = useState('');
   const [correo, setCorreo] = useState('');
   const [texto, setTexto] = useState('');
   const [puntuacion, setPuntuacion] = useState(5);
   const [mensaje, setMensaje] = useState('');
   const [cargando, setCargando] = useState(false);
+  
+  // Estados para recomendaciones
+  const [recomendacion, setRecomendacion] = useState('');
+  const [mensajeRec, setMensajeRec] = useState('');
+  const [cargandoRec, setCargandoRec] = useState(false);
+  
+  // Estado para alternar entre tabs
+  const [tabActiva, setTabActiva] = useState('comentarios');
 
   // Puerto correcto para tu servidor Express
   const API_BASE_URL = 'http://localhost:3001/api';
@@ -14,7 +23,7 @@ const BotonComentarios = () => {
   // Estilos en tema oscuro
   const estilos = {
     container: {
-      maxWidth: '32rem',
+      maxWidth: '36rem',
       margin: '0 auto',
       padding: '2rem',
       background: 'linear-gradient(145deg, #1e293b 0%, #334155 100%)',
@@ -47,6 +56,31 @@ const BotonComentarios = () => {
       WebkitTextFillColor: 'transparent',
       backgroundClip: 'text'
     },
+    tabContainer: {
+      display: 'flex',
+      background: 'rgba(15, 23, 42, 0.6)',
+      borderRadius: '0.75rem',
+      padding: '0.25rem',
+      marginBottom: '2rem',
+      border: '1px solid rgba(148, 163, 184, 0.2)'
+    },
+    tab: {
+      flex: 1,
+      padding: '0.75rem 1rem',
+      border: 'none',
+      borderRadius: '0.5rem',
+      cursor: 'pointer',
+      fontSize: '0.95rem',
+      fontWeight: '600',
+      transition: 'all 0.3s ease',
+      background: 'transparent',
+      color: '#94a3b8'
+    },
+    tabActiva: {
+      background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+      color: '#ffffff',
+      boxShadow: '0 4px 12px rgba(59, 130, 246, 0.3)'
+    },
     form: {
       display: 'flex',
       flexDirection: 'column',
@@ -66,18 +100,6 @@ const BotonComentarios = () => {
       boxSizing: 'border-box',
       fontFamily: 'inherit',
       outline: 'none'
-    },
-    inputPlaceholder: {
-      '::placeholder': {
-        color: '#94a3b8',
-        opacity: '0.8'
-      }
-    },
-    inputFocus: {
-      borderColor: '#3b82f6',
-      boxShadow: '0 0 0 4px rgba(59, 130, 246, 0.15), 0 0 20px rgba(59, 130, 246, 0.1)',
-      transform: 'translateY(-2px)',
-      backgroundColor: 'rgba(30, 41, 59, 0.95)'
     },
     inputDisabled: {
       backgroundColor: 'rgba(30, 41, 59, 0.5)',
@@ -127,10 +149,10 @@ const BotonComentarios = () => {
       color: '#ffffff',
       boxShadow: '0 10px 25px -5px rgba(59, 130, 246, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.2)'
     },
-    buttonHover: {
-      background: 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)',
-      transform: 'translateY(-3px)',
-      boxShadow: '0 20px 40px -5px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.3)'
+    buttonRecomendacion: {
+      background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+      color: '#ffffff',
+      boxShadow: '0 10px 25px -5px rgba(16, 185, 129, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.2)'
     },
     buttonDisabled: {
       background: 'linear-gradient(135deg, #475569 0%, #334155 100%)',
@@ -198,92 +220,92 @@ const BotonComentarios = () => {
     return regex.test(email);
   };
 
+  const getInputStyle = (base, disabled) => ({
+    ...base,
+    ...(disabled ? estilos.inputDisabled : {})
+  });
+
+  const handleFocus = (e) => {
+    e.target.style.borderColor = '#3b82f6';
+    e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.15), 0 0 20px rgba(59, 130, 246, 0.1)';
+    e.target.style.transform = 'translateY(-2px)';
+    e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.95)';
+  };
+
+  const handleBlur = (e) => {
+    e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)';
+    e.target.style.boxShadow = 'none';
+    e.target.style.transform = 'translateY(0)';
+    e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
+  };
+
+  // Función para manejar usuario (reutilizable)
+  const manejarUsuario = async () => {
+    console.log('Creando/obteniendo usuario...');
+    const usuarioResponse = await fetch(`${API_BASE_URL}/usuario`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Accept': 'application/json'
+      },
+      body: JSON.stringify({ 
+        nombre: nombre.trim(), 
+        correo: correo.trim() 
+      })
+    });
+
+    if (usuarioResponse.ok) {
+      return await usuarioResponse.json();
+    } else {
+      // Si el POST falla, intentar obtener usuarios existentes
+      const usuariosResponse = await fetch(`${API_BASE_URL}/usuario`);
+      
+      if (!usuariosResponse.ok) {
+        throw new Error(`Error al obtener usuarios: ${usuariosResponse.status}`);
+      }
+      
+      const usuarios = await usuariosResponse.json();
+      const usuario = usuarios.find(u => u.correo === correo.trim());
+      
+      if (!usuario) {
+        const errorData = await usuarioResponse.text();
+        throw new Error(`No se pudo crear/encontrar el usuario. Error: ${errorData}`);
+      }
+      
+      return usuario;
+    }
+  };
+
   const enviarComentario = async () => {
     setCargando(true);
     setMensaje('');
 
-    // Validaciones mejoradas
+    // Validaciones
     if (!nombre.trim()) {
       setMensaje('❌ El nombre es obligatorio');
       setCargando(false);
       return;
     }
 
-    if (!correo.trim()) {
-      setMensaje('❌ El correo electrónico es obligatorio');
-      setCargando(false);
-      return;
-    }
-
-    if (!validarEmail(correo.trim())) {
+    if (!correo.trim() || !validarEmail(correo.trim())) {
       setMensaje('❌ Ingresa un correo electrónico válido');
       setCargando(false);
       return;
     }
 
-    if (!texto.trim()) {
-      setMensaje('❌ El comentario no puede estar vacío');
-      setCargando(false);
-      return;
-    }
-
-    if (texto.trim().length < 10) {
+    if (!texto.trim() || texto.trim().length < 10) {
       setMensaje('❌ El comentario debe tener al menos 10 caracteres');
       setCargando(false);
       return;
     }
 
     try {
-      console.log('Iniciando proceso de envío de comentario...');
-      
-      // Primero crear/obtener el usuario
-      let usuario;
-      
-      console.log('Creando/obteniendo usuario...');
-      const usuarioResponse = await fetch(`${API_BASE_URL}/usuario`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Accept': 'application/json'
-        },
-        body: JSON.stringify({ 
-          nombre: nombre.trim(), 
-          correo: correo.trim() 
-        })
-      });
+      const usuario = await manejarUsuario();
 
-      console.log('Respuesta usuario:', usuarioResponse.status);
-
-      if (usuarioResponse.ok) {
-        usuario = await usuarioResponse.json();
-        console.log('Usuario obtenido:', usuario);
-      } else {
-        // Si el POST falla, intentar obtener usuarios existentes
-        console.log('POST falló, intentando obtener usuarios existentes...');
-        
-        const usuariosResponse = await fetch(`${API_BASE_URL}/usuario`);
-        
-        if (!usuariosResponse.ok) {
-          throw new Error(`Error al obtener usuarios: ${usuariosResponse.status}`);
-        }
-        
-        const usuarios = await usuariosResponse.json();
-        usuario = usuarios.find(u => u.correo === correo.trim());
-        
-        if (!usuario) {
-          const errorData = await usuarioResponse.text();
-          throw new Error(`No se pudo crear/encontrar el usuario. Error: ${errorData}`);
-        }
-        
-        console.log('Usuario encontrado:', usuario);
-      }
-
-      // Verificar que tenemos un usuario válido
       if (!usuario || !usuario.id) {
         throw new Error('No se pudo obtener un ID de usuario válido');
       }
 
-      // Crear la opinión
       console.log('Creando opinión...');
       const opinionResponse = await fetch(`${API_BASE_URL}/opiniones`, {
         method: 'POST',
@@ -298,21 +320,12 @@ const BotonComentarios = () => {
         })
       });
 
-      console.log('Respuesta opinión:', opinionResponse.status);
-
       if (opinionResponse.ok) {
-        const opinionData = await opinionResponse.json();
-        console.log('Opinión creada:', opinionData);
-        
         setMensaje('✅ ¡Comentario enviado correctamente!');
-        
-        // Limpiar formulario
         setNombre('');
         setCorreo('');
         setTexto('');
         setPuntuacion(5);
-        
-        // Limpiar mensaje después de 4 segundos
         setTimeout(() => setMensaje(''), 4000);
       } else {
         const errorData = await opinionResponse.text();
@@ -322,7 +335,6 @@ const BotonComentarios = () => {
     } catch (err) {
       console.error('Error completo:', err);
       
-      // Mensajes de error más específicos
       if (err.name === 'TypeError' && err.message.includes('fetch')) {
         setMensaje('❌ No se puede conectar al servidor. Verifica que esté corriendo en el puerto correcto.');
       } else if (err.message.includes('404')) {
@@ -337,11 +349,74 @@ const BotonComentarios = () => {
     }
   };
 
-  // Función para obtener estilos combinados
-  const getInputStyle = (base) => ({
-    ...base,
-    ...(cargando ? estilos.inputDisabled : {})
-  });
+  const enviarRecomendacion = async () => {
+    setCargandoRec(true);
+    setMensajeRec('');
+
+    // Validaciones
+    if (!nombre.trim()) {
+      setMensajeRec('❌ El nombre es obligatorio');
+      setCargandoRec(false);
+      return;
+    }
+
+    if (!correo.trim() || !validarEmail(correo.trim())) {
+      setMensajeRec('❌ Ingresa un correo electrónico válido');
+      setCargandoRec(false);
+      return;
+    }
+
+    if (!recomendacion.trim() || recomendacion.trim().length < 10) {
+      setMensajeRec('❌ La recomendación debe tener al menos 10 caracteres');
+      setCargandoRec(false);
+      return;
+    }
+
+    try {
+      const usuario = await manejarUsuario();
+
+      if (!usuario || !usuario.id) {
+        throw new Error('No se pudo obtener un ID de usuario válido');
+      }
+
+      console.log('Creando recomendación...');
+      const recomendacionResponse = await fetch(`${API_BASE_URL}/recomendaciones`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Accept': 'application/json'
+        },
+        body: JSON.stringify({ 
+          contenido: recomendacion.trim(),
+          usuario_id: usuario.id
+        })
+      });
+
+      if (recomendacionResponse.ok) {
+        setMensajeRec('✅ ¡Recomendación enviada correctamente!');
+        setRecomendacion('');
+        setTimeout(() => setMensajeRec(''), 4000);
+      } else {
+        const errorData = await recomendacionResponse.text();
+        throw new Error(`Error al crear recomendación: ${recomendacionResponse.status} - ${errorData}`);
+      }
+
+    } catch (err) {
+      console.error('Error completo:', err);
+      
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        setMensajeRec('❌ No se puede conectar al servidor. Verifica que esté corriendo en el puerto correcto.');
+      } else if (err.message.includes('404')) {
+        setMensajeRec('❌ Endpoint no encontrado. Verifica las rutas de tu API.');
+      } else if (err.message.includes('500')) {
+        setMensajeRec('❌ Error interno del servidor. Revisa los logs del backend.');
+      } else {
+        setMensajeRec(`❌ Error: ${err.message}`);
+      }
+    } finally {
+      setCargandoRec(false);
+    }
+  };
 
   return (
     <>
@@ -402,26 +477,39 @@ const BotonComentarios = () => {
         
         <h2 style={estilos.title}>💬 Comparte tu Experiencia</h2>
         
+        {/* Tabs */}
+        <div style={estilos.tabContainer}>
+          <button 
+            style={{
+              ...estilos.tab,
+              ...(tabActiva === 'comentarios' ? estilos.tabActiva : {})
+            }}
+            onClick={() => setTabActiva('comentarios')}
+          >
+            💬 Comentarios
+          </button>
+          <button 
+            style={{
+              ...estilos.tab,
+              ...(tabActiva === 'recomendaciones' ? estilos.tabActiva : {})
+            }}
+            onClick={() => setTabActiva('recomendaciones')}
+          >
+            💡 Recomendaciones
+          </button>
+        </div>
+
+        {/* Formulario de datos del usuario (común para ambos) */}
         <div style={estilos.form}>
           <input 
             type="text" 
             placeholder="¿Cómo te llamas?"
             value={nombre}
             onChange={(e) => setNombre(e.target.value)}
-            disabled={cargando}
-            style={getInputStyle(estilos.inputBase)}
-            onFocus={(e) => {
-              e.target.style.borderColor = '#3b82f6';
-              e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.15), 0 0 20px rgba(59, 130, 246, 0.1)';
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.95)';
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)';
-              e.target.style.boxShadow = 'none';
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
-            }}
+            disabled={cargando || cargandoRec}
+            style={getInputStyle(estilos.inputBase, cargando || cargandoRec)}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
           />
           
           <input 
@@ -429,117 +517,154 @@ const BotonComentarios = () => {
             placeholder="tu.email@ejemplo.com"
             value={correo}
             onChange={(e) => setCorreo(e.target.value)}
-            disabled={cargando}
-            style={getInputStyle(estilos.inputBase)}
-            onFocus={(e) => {
-              e.target.style.borderColor = '#3b82f6';
-              e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.15), 0 0 20px rgba(59, 130, 246, 0.1)';
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.95)';
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)';
-              e.target.style.boxShadow = 'none';
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
-            }}
+            disabled={cargando || cargandoRec}
+            style={getInputStyle(estilos.inputBase, cargando || cargandoRec)}
+            onFocus={handleFocus}
+            onBlur={handleBlur}
           />
-          
-          <div style={estilos.labelGroup}>
-            <label style={estilos.label}>
-              <span>⭐</span>
-              <span>Califica tu experiencia</span>
-            </label>
-            <select 
-              value={puntuacion} 
-              onChange={(e) => setPuntuacion(e.target.value)}
-              disabled={cargando}
-              style={getInputStyle(estilos.inputBase)}
-              onFocus={(e) => {
-                e.target.style.borderColor = '#3b82f6';
-                e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.15), 0 0 20px rgba(59, 130, 246, 0.1)';
-                e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.95)';
-              }}
-              onBlur={(e) => {
-                e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)';
-                e.target.style.boxShadow = 'none';
-                e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
-              }}
-            >
-              <option value={1}>⭐ Muy decepcionante</option>
-              <option value={2}>⭐⭐ Necesita mejoras</option>
-              <option value={3}>⭐⭐⭐ Está bien</option>
-              <option value={4}>⭐⭐⭐⭐ Me gustó mucho</option>
-              <option value={5}>⭐⭐⭐⭐⭐ ¡Increíble experiencia!</option>
-            </select>
-          </div>
-          
-          <textarea
-            placeholder="Cuéntanos qué te pareció... (mínimo 10 caracteres)"
-            value={texto}
-            onChange={(e) => setTexto(e.target.value)}
-            disabled={cargando}
-            rows="5"
-            style={{...getInputStyle(estilos.inputBase), ...estilos.textarea}}
-            onFocus={(e) => {
-              e.target.style.borderColor = '#3b82f6';
-              e.target.style.boxShadow = '0 0 0 4px rgba(59, 130, 246, 0.15), 0 0 20px rgba(59, 130, 246, 0.1)';
-              e.target.style.transform = 'translateY(-2px)';
-              e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.95)';
-            }}
-            onBlur={(e) => {
-              e.target.style.borderColor = 'rgba(148, 163, 184, 0.2)';
-              e.target.style.boxShadow = 'none';
-              e.target.style.transform = 'translateY(0)';
-              e.target.style.backgroundColor = 'rgba(30, 41, 59, 0.8)';
-            }}
-          />
-          
-          <button 
-            onClick={enviarComentario} 
-            disabled={cargando}
-            style={{
-              ...estilos.button,
-              ...(cargando ? estilos.buttonDisabled : estilos.buttonNormal)
-            }}
-            onMouseEnter={(e) => {
-              if (!cargando) {
-                e.target.style.background = 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)';
-                e.target.style.transform = 'translateY(-3px)';
-                e.target.style.boxShadow = '0 20px 40px -5px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.3)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!cargando) {
-                e.target.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 10px 25px -5px rgba(59, 130, 246, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.2)';
-              }
-            }}
-          >
-            {cargando ? (
-              <>
-                <div style={estilos.spinner}></div>
-                <span>Procesando...</span>
-              </>
-            ) : (
-              <>
-                <span>🚀</span>
-                <span>Enviar mi comentario</span>
-              </>
-            )}
-          </button>
+
+          {/* Contenido específico según la tab */}
+          {tabActiva === 'comentarios' && (
+            <>
+              <div style={estilos.labelGroup}>
+                <label style={estilos.label}>
+                  <span>⭐</span>
+                  <span>Califica tu experiencia</span>
+                </label>
+                <select 
+                  value={puntuacion} 
+                  onChange={(e) => setPuntuacion(e.target.value)}
+                  disabled={cargando}
+                  style={getInputStyle(estilos.inputBase, cargando)}
+                  onFocus={handleFocus}
+                  onBlur={handleBlur}
+                >
+                  <option value={1}>⭐ Muy decepcionante</option>
+                  <option value={2}>⭐⭐ Necesita mejoras</option>
+                  <option value={3}>⭐⭐⭐ Está bien</option>
+                  <option value={4}>⭐⭐⭐⭐ Me gustó mucho</option>
+                  <option value={5}>⭐⭐⭐⭐⭐ ¡Increíble experiencia!</option>
+                </select>
+              </div>
+              
+              <textarea
+                placeholder="Cuéntanos qué te pareció... (mínimo 10 caracteres)"
+                value={texto}
+                onChange={(e) => setTexto(e.target.value)}
+                disabled={cargando}
+                rows="5"
+                style={{...getInputStyle(estilos.inputBase, cargando), ...estilos.textarea}}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+              />
+              
+              <button 
+                onClick={enviarComentario} 
+                disabled={cargando}
+                style={{
+                  ...estilos.button,
+                  ...(cargando ? estilos.buttonDisabled : estilos.buttonNormal)
+                }}
+                onMouseEnter={(e) => {
+                  if (!cargando) {
+                    e.target.style.background = 'linear-gradient(135deg, #2563eb 0%, #1e40af 100%)';
+                    e.target.style.transform = 'translateY(-3px)';
+                    e.target.style.boxShadow = '0 20px 40px -5px rgba(59, 130, 246, 0.5), 0 0 0 1px rgba(59, 130, 246, 0.3)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!cargando) {
+                    e.target.style.background = 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)';
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 10px 25px -5px rgba(59, 130, 246, 0.4), 0 0 0 1px rgba(59, 130, 246, 0.2)';
+                  }
+                }}
+              >
+                {cargando ? (
+                  <>
+                    <div style={estilos.spinner}></div>
+                    <span>Procesando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>🚀</span>
+                    <span>Enviar mi comentario</span>
+                  </>
+                )}
+              </button>
+
+              {mensaje && (
+                <div style={{
+                  ...estilos.mensaje,
+                  ...(mensaje.includes('✅') ? estilos.mensajeExito : estilos.mensajeError)
+                }}>
+                  <span style={{fontSize: '1.2rem'}}>{mensaje.includes('✅') ? '🎉' : '⚠️'}</span>
+                  <span>{mensaje}</span>
+                </div>
+              )}
+            </>
+          )}
+
+          {tabActiva === 'recomendaciones' && (
+            <>
+              <textarea
+                placeholder="Comparte una recomendación que pueda ayudar a otros... (mínimo 10 caracteres)"
+                value={recomendacion}
+                onChange={(e) => setRecomendacion(e.target.value)}
+                disabled={cargandoRec}
+                rows="6"
+                style={{...getInputStyle(estilos.inputBase, cargandoRec), ...estilos.textarea}}
+                onFocus={handleFocus}
+                onBlur={handleBlur}
+              />
+              
+              <button 
+                onClick={enviarRecomendacion} 
+                disabled={cargandoRec}
+                style={{
+                  ...estilos.button,
+                  ...(cargandoRec ? estilos.buttonDisabled : estilos.buttonRecomendacion)
+                }}
+                onMouseEnter={(e) => {
+                  if (!cargandoRec) {
+                    e.target.style.background = 'linear-gradient(135deg, #059669 0%, #047857 100%)';
+                    e.target.style.transform = 'translateY(-3px)';
+                    e.target.style.boxShadow = '0 20px 40px -5px rgba(16, 185, 129, 0.5), 0 0 0 1px rgba(16, 185, 129, 0.3)';
+                  }
+                }}
+                onMouseLeave={(e) => {
+                  if (!cargandoRec) {
+                    e.target.style.background = 'linear-gradient(135deg, #10b981 0%, #059669 100%)';
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = '0 10px 25px -5px rgba(16, 185, 129, 0.4), 0 0 0 1px rgba(16, 185, 129, 0.2)';
+                  }
+                }}
+              >
+                {cargandoRec ? (
+                  <>
+                    <div style={estilos.spinner}></div>
+                    <span>Procesando...</span>
+                  </>
+                ) : (
+                  <>
+                    <span>💡</span>
+                    <span>Enviar recomendación</span>
+                  </>
+                )}
+              </button>
+
+              {mensajeRec && (
+                <div style={{
+                  ...estilos.mensaje,
+                  ...(mensajeRec.includes('✅') ? estilos.mensajeExito : estilos.mensajeError)
+                }}>
+                  <span style={{fontSize: '1.2rem'}}>{mensajeRec.includes('✅') ? '🎉' : '⚠️'}</span>
+                  <span>{mensajeRec}</span>
+                </div>
+              )}
+            </>
+          )}
         </div>
-        
-        {mensaje && (
-          <div style={{
-            ...estilos.mensaje,
-            ...(mensaje.includes('✅') ? estilos.mensajeExito : estilos.mensajeError)
-          }}>
-            <span style={{fontSize: '1.2rem'}}>{mensaje.includes('✅') ? '🎉' : '⚠️'}</span>
-            <span>{mensaje}</span>
-          </div>
-        )}
         
         {/* Panel de debug mejorado */}
         <div style={estilos.debug}>
@@ -549,10 +674,14 @@ const BotonComentarios = () => {
           </div>
           <div style={{display: 'grid', gap: '0.25rem'}}>
             <div><strong>Endpoint:</strong> {API_BASE_URL}</div>
-            <div><strong>Estado:</strong> {cargando ? '⏳ Procesando' : '✅ Listo'}</div>
-            <div><strong>Caracteres:</strong> {texto.length}/∞</div>
+            <div><strong>Tab Activa:</strong> {tabActiva}</div>
+            <div><strong>Estado:</strong> {(cargando || cargandoRec) ? '⏳ Procesando' : '✅ Listo'}</div>
+            <div><strong>Caracteres:</strong> {tabActiva === 'comentarios' ? texto.length : recomendacion.length}/∞</div>
             <div><strong>Validación:</strong> {
-              texto.length >= 10 && nombre.trim() && correo.trim() ? 
+              (tabActiva === 'comentarios' ? 
+                (texto.length >= 10 && nombre.trim() && correo.trim()) :
+                (recomendacion.length >= 10 && nombre.trim() && correo.trim())
+              ) ? 
               '✅ Formulario válido' : 
               '❌ Faltan campos'
             }</div>
@@ -563,4 +692,4 @@ const BotonComentarios = () => {
   );
 };
 
-export default BotonComentarios;
+export default SistemaComentarios;
