@@ -10,6 +10,8 @@ import BotonesAccion from '../components/BotonesAccion';
 import CanvasVisual from '../components/CanvasVisual';
 import PanelInformacion from '../components/PanelInformacion';
 import BotonTutorial from '../components/BotonTutorial';
+import BotonComentarios from '../components/BotonComentarios';
+
 
 // Importa la configuración del tutorial
 import { iniciarTutorial, mostrarConsejo } from '../utils/tutorialConfig';
@@ -678,6 +680,7 @@ const toggleConsejos = () => {
           estadoVisualizacion={estadoVisualizacion}
           estructuraSeleccionada={estructuraSeleccionada}
         />
+        <BotonComentarios />
         </div>
       </div>
     </div>
