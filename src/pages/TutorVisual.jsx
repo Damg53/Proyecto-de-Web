@@ -58,7 +58,7 @@ const TutorVisual = () => {
   // Estados para el intérprete y visualización
   const [interprete] = useState(new InterpretadorEstructuras());
   const [estadoVisualizacion, setEstadoVisualizacion] = useState(null);
-  const [modoEjecucion, setModoEjecucion] = useState('completo'); // 'completo' o 'paso_a_paso'
+ const [modoEjecucion, setModoEjecucion] = useState('paso_a_paso'); // Cambiar de 'completo' a 'paso_a_paso'
   const [mensajeEjecutor, setMensajeEjecutor] = useState('');
 
   // Efecto para mostrar tutorial automáticamente en la primera visita
@@ -272,11 +272,22 @@ const TutorVisual = () => {
 BOF.push("Libro1");
 BOF.push("Libro2");
 BOF.push("Libro3");
-BOF.pop();
-BOF.peek();`);
+BOF.pop();`);
     } else if (nuevaEstructura === 'Cola') {
         // Código de ejemplo para cola
-        setCodigo('Cola miCola = new Cola();\nmiCola.enqueue(10);\nmiCola.enqueue(20);\nmiCola.enqueue(30);\nmiCola.dequeue();\nmiCola.front();');
+        setCodigo(
+  "Queue<string> Bof = new Queue<string>();\n" +
+  "Bof.Enqueue(\"Diego\");\n" +
+  "Bof.Enqueue(\"Daniel\");\n" +
+  "Bof.Enqueue(\"Kale\");\n" +
+  "Bof.Dequeue();\n" +
+  "Bof.Enqueue(\"Chayanne\");\n" +
+  "Bof.Dequeue();\n" +
+  "Bof.Enqueue(\"Jose\");\n" +
+  "Bof.Dequeue();\n" +
+  "Bof.Enqueue(\"Marco\");"
+);
+
     } else if (nuevaEstructura === 'Lista') {
         // Código de ejemplo para lista doblemente enlazada
         setCodigo(`ListaDoble BOF = new ListaDoble();
@@ -324,59 +335,68 @@ BOF.dijkstra("A", "E");`);
   };
 
   // Función para ejecutar código completo
-  const handleEjecutar = () => {
-    if (!codigo.trim()) {
-      if (mostrarConsejos && estructuraSeleccionada) {
-        mostrarConsejoEducativo('codigo');
-      } else {
-        setMensajeEjecutor('Error: No hay código para ejecutar');
-      }
-      return;
+const handleEjecutar = () => {
+  if (!codigo.trim()) {
+    if (mostrarConsejos && estructuraSeleccionada) {
+      mostrarConsejoEducativo('codigo');
+    } else {
+      setMensajeEjecutor('Error: No hay código para ejecutar');
     }
-    
-    if (!estructuraSeleccionada) {
-      if (mostrarConsejos) {
-        mostrarConsejo(
-          '.selector-estructura',
-          '🎯 Primero selecciona una estructura',
-          'Elige qué estructura de datos quieres usar. Cada una tiene características únicas y casos de uso específicos.'
-        );
-      }
-      setMensajeEjecutor('Error: Selecciona una estructura de datos');
-      return;
+    return;
+  }
+  
+  if (!estructuraSeleccionada) {
+    if (mostrarConsejos) {
+      mostrarConsejo(
+        '.selector-estructura',
+        '🎯 Primero selecciona una estructura',
+        'Elige qué estructura de datos quieres usar. Cada una tiene características únicas y casos de uso específicos.'
+      );
     }
-
+    setMensajeEjecutor('Error: Selecciona una estructura de datos');
+    return;
+  }
     try {
-      // Cargar y ejecutar el código
-      interprete.cargarCodigo(codigo);
-      const resultado = interprete.ejecutarTodo();
+    // Reiniciar y cargar código para modo paso a paso
+    interprete.reiniciar();
+    interprete.cargarCodigo(codigo);
+    
+    // Ejecutar solo el primer paso
+    const resultado = interprete.ejecutarSiguientePaso();
+    
+    if (resultado) {
+      // Calcular línea actual si no está incluida
+      if (!resultado.lineaActual) {
+        resultado.lineaActual = calcularLineaActual(codigo, resultado.pasoActual);
+      }
       
       setEstadoVisualizacion(resultado);
-      setModoEjecucion('completo');
-      setMensajeEjecutor('Código ejecutado exitosamente');
+      setModoEjecucion('paso_a_paso');
+      setMensajeEjecutor(`Paso ${resultado.pasoActual}/${resultado.totalPasos} ejecutado`);
       
       // Mostrar consejo sobre la ejecución
       if (mostrarConsejos) {
         mostrarConsejoEducativo('ejecucion', '.visualization-panel');
       }
-      
-      console.log("Resultado de ejecución:", resultado);
-      
-    } catch (error) {
-      setMensajeEjecutor(`Error en la ejecución: ${error.message}`);
-      console.error("Error al ejecutar código:", error);
-      
-      if (mostrarConsejos) {
-        setTimeout(() => {
-          mostrarConsejo(
-            '.code-editor',
-            '🐛 Error en el código',
-            'Revisa la sintaxis: verifica paréntesis, comillas, y que las operaciones sean válidas para la estructura seleccionada.'
-          );
-        }, 1000);
-      }
     }
-  };
+    
+    console.log("Primer paso ejecutado:", resultado);
+    
+  } catch (error) {
+    setMensajeEjecutor(`Error en la ejecución: ${error.message}`);
+    console.error("Error al ejecutar código:", error);
+    
+    if (mostrarConsejos) {
+      setTimeout(() => {
+        mostrarConsejo(
+          '.code-editor',
+          '🐛 Error en el código',
+          'Revisa la sintaxis: verifica paréntesis, comillas, y que las operaciones sean válidas para la estructura seleccionada.'
+        );
+      }, 1000);
+    }
+  }
+};
 
   // Función para reiniciar
   const handleReiniciar = () => {

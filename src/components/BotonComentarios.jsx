@@ -18,7 +18,7 @@ const SistemaComentarios = () => {
   const [tabActiva, setTabActiva] = useState('comentarios');
 
   // Puerto correcto para tu servidor Express
-  const API_BASE_URL = 'http://localhost:3001/api';
+  const API_BASE_URL = 'https://api-tutor-visual.onrender.com/api';
 
   // Estilos en tema oscuro
   const estilos = {

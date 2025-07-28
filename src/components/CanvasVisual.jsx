@@ -1,5 +1,5 @@
-// CanvasVisual.jsx - Componente para visualizar estructuras de datos (incluye grafos mejorados)
-// CanvasVisual.jsx - Componente completo para visualizar todas las estructuras de datos incluidas las pilas con animaciones
+// CanvasVisual.jsx - Componente para visualizar estructuras de datos (incluye grafos mejorados y colas)
+// CanvasVisual.jsx - Componente completo para visualizar todas las estructuras de datos incluidas las pilas y colas con animaciones
 import React, { useEffect, useRef, useCallback } from 'react';
 
 const CanvasVisual = ({ estadoVisualizacion }) => {
@@ -54,6 +54,39 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
       });
     }
 
+    // Procesar y dibujar las colas (con animaciones)
+    if (estadoVisualizacion.colas && Object.keys(estadoVisualizacion.colas).length > 0) {
+      let yPosicionColas = 50; // Posición inicial para las colas
+      
+      Object.values(estadoVisualizacion.colas).forEach(cola => {
+        if (!cola) return;
+
+        // Actualizar animaciones de la cola
+        if (typeof cola.actualizarAnimacion === 'function') {
+          const necesitaRedibujarse = cola.actualizarAnimacion();
+          if (necesitaRedibujarse) {
+            hayAnimacionesActivas = true;
+          }
+        }
+
+        // Verificar si tiene animaciones activas
+        if (typeof cola.hayAnimacionesActivas === 'function' && cola.hayAnimacionesActivas()) {
+          hayAnimacionesActivas = true;
+        }
+
+        // Dibujar la cola con todas sus animaciones
+        if (typeof cola.dibujar === 'function') {
+          try {
+            yPosicionColas = cola.dibujar(ctx, 50, yPosicionColas);
+            yPosicionColas += 20; // Espacio entre colas
+          } catch (error) {
+            console.error('Error dibujando cola:', error);
+          }
+        }
+      });
+    }
+
+    // Procesar otras estructuras de datos (estáticas)
     // Procesar otras estructuras de datos (estáticas)
     if (estadoVisualizacion.estructuras && estadoVisualizacion.estructuras.length > 0) {
       dibujarEstructuras(ctx, estadoVisualizacion.estructuras);
@@ -135,6 +168,14 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
       pila && typeof pila.hayAnimacionesActivas === 'function' && pila.hayAnimacionesActivas()
     );
   };
+   const hayAnimacionesActivasEnColas = () => {
+    if (!estadoVisualizacion?.colas) return false;
+    
+    return Object.values(estadoVisualizacion.colas).some(cola => 
+      cola && typeof cola.hayAnimacionesActivas === 'function' && cola.hayAnimacionesActivas()
+    );
+  };
+
 
   // Effect principal para manejar el loop de animación
   useEffect(() => {
@@ -184,7 +225,9 @@ const CanvasVisual = ({ estadoVisualizacion }) => {
       y += 50; // Mayor separación entre estructuras
     });
   };
-
+  // Verificar si hay animaciones activas en las colas
+ 
+  
   const dibujarGrafo = (ctx, grafo, yInicio, canvasWidth, alturaMaxima) => {
     const margenLateral = 80;
     const centroX = canvasWidth / 2;
@@ -1315,11 +1358,13 @@ const dibujarMatriz = (ctx, matriz, startY, canvasWidth, alturaMaxima) => {
   const matrizAltura = filasReales * (altoCelda + espacioEntre) + 80;
   return y + matrizAltura;
 };
-   // Obtener estadísticas para mostrar en la UI
+  // Obtener estadísticas para mostrar en la UI
   const obtenerEstadisticas = () => {
     const stats = {
       pilas: 0,
       elementosEnPilas: 0,
+      colas: 0,
+      elementosEnColas: 0,
       matrices: 0,
       otrasEstructuras: 0
     };
@@ -1329,6 +1374,14 @@ const dibujarMatriz = (ctx, matriz, startY, canvasWidth, alturaMaxima) => {
       stats.pilas = pilas.length;
       stats.elementosEnPilas = pilas.reduce((sum, pila) => {
         return sum + (pila?.elementos?.length || 0);
+      }, 0);
+    }
+
+    if (estadoVisualizacion?.colas) {
+      const colas = Object.values(estadoVisualizacion.colas);
+      stats.colas = colas.length;
+      stats.elementosEnColas = colas.reduce((sum, cola) => {
+        return sum + (cola?.elementos?.length || 0);
       }, 0);
     }
     
@@ -1347,8 +1400,10 @@ const dibujarMatriz = (ctx, matriz, startY, canvasWidth, alturaMaxima) => {
   };
 
   const stats = obtenerEstadisticas();
-  const hayAnimaciones = hayAnimacionesActivasEnPilas();
-  const totalEstructuras = stats.pilas + stats.matrices + stats.otrasEstructuras;
+  const hayAnimacionesPilas = hayAnimacionesActivasEnPilas();
+  const hayAnimacionesColas = hayAnimacionesActivasEnColas();
+  const hayAnimaciones = hayAnimacionesPilas || hayAnimacionesColas;
+  const totalEstructuras = stats.pilas + stats.colas + stats.matrices + stats.otrasEstructuras;
 
   return (
     <div className="canvas-container" style={{ 
@@ -1386,7 +1441,8 @@ const dibujarMatriz = (ctx, matriz, startY, canvasWidth, alturaMaxima) => {
             borderRadius: '4px'
           }}>
             {totalEstructuras} estructura{totalEstructuras !== 1 ? 's' : ''} 
-            {stats.pilas > 0 && ` • ${stats.elementosEnPilas} elementos en pilas`}
+            {stats.pilas > 0 && ` • ${stats.elementosEnPilas} en pilas`}
+            {stats.colas > 0 && ` • ${stats.elementosEnColas} en colas`}
           </span>
         </div>
         
@@ -1411,7 +1467,8 @@ const dibujarMatriz = (ctx, matriz, startY, canvasWidth, alturaMaxima) => {
               borderRadius: '50%',
               animation: 'blink 1s infinite'
             }}></div>
-            Animando Pilas...
+            Animando {hayAnimacionesPilas && hayAnimacionesColas ? 'Pilas y Colas' : 
+                      hayAnimacionesPilas ? 'Pilas' : 'Colas'}...
           </div>
         )}
       </div>
@@ -1443,7 +1500,8 @@ const dibujarMatriz = (ctx, matriz, startY, canvasWidth, alturaMaxima) => {
           color: '#6c757d'
         }}>
           {hayAnimaciones ? 
-            '🎬 Animaciones de pilas en progreso...' : 
+            `🎬 Animaciones de ${hayAnimacionesPilas && hayAnimacionesColas ? 'pilas y colas' : 
+                                hayAnimacionesPilas ? 'pilas' : 'colas'} en progreso...` : 
             '⏸ Listo para nuevas operaciones'
           }
         </div>
@@ -1457,6 +1515,7 @@ const dibujarMatriz = (ctx, matriz, startY, canvasWidth, alturaMaxima) => {
             gap: '10px'
           }}>
             {stats.pilas > 0 && <span>📚 {stats.pilas} pila{stats.pilas !== 1 ? 's' : ''}</span>}
+            {stats.colas > 0 && <span>🚶 {stats.colas} cola{stats.colas !== 1 ? 's' : ''}</span>}
             {stats.matrices > 0 && <span>🔢 {stats.matrices} matriz{stats.matrices !== 1 ? 'ces' : ''}</span>}
             {stats.otrasEstructuras > 0 && <span>🏗 {stats.otrasEstructuras} otra{stats.otrasEstructuras !== 1 ? 's' : ''}</span>}
           </div>

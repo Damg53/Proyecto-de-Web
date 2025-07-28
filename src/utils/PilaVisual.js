@@ -34,10 +34,10 @@ class PilaVisual {
     cargarImagenesManos() {
         try {
             this.manoIzquierda = new Image();
-            this.manoIzquierda.src = 'src/assets/ManoIzquierda.png';
+            this.manoIzquierda.src = 'src/assets/ManoIzquierda.webp';
             
             this.manoDerecha = new Image();
-            this.manoDerecha.src = 'src/assets/ManoDerecha.png';
+            this.manoDerecha.src = 'src/assets/ManoDerecha.webp';
         } catch (error) {
             console.error('Error al cargar las imágenes de las manos:', error);
         }

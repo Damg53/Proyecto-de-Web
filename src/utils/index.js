@@ -8,6 +8,8 @@ import NodoArbol from './NodoArbol.js';         // Nueva importación
 import GrafoVisual from './GrafoVisual.js';
 import NodoGrafo from './NodoGrafo.js';
 import PilaVisual from './PilaVisual.js';
+import ColaVisual from './ColaVisual.js';       // Nueva importación para colas
+import PersonaAnimada from './PersonaAnimada.js'; // Nueva importación para animaciones de colas
 import LibroAnimado from './LibroAnimado.js';
 import InterpretadorEstructuras from './InterpretadorEstructuras.js';
 
@@ -15,12 +17,14 @@ export {
     VectorVisual,
     MatrizVisual,
     ListaVisual,   // Exportar nueva clase
-    NodoDL, 
+    NodoDL,
     ArbolVisual,       // Exportar nueva clase
     NodoArbol,
     GrafoVisual,
     NodoGrafo,
     PilaVisual,
+    ColaVisual,        // Exportar nueva clase para colas
+    PersonaAnimada,    // Exportar clase de animación para colas
     LibroAnimado,
     InterpretadorEstructuras
 };

@@ -1,8 +1,8 @@
-import LibroRojo from '../assets/LibroRojo.png';
-import LibroAzul from '../assets/LibroAzul.png';
-import LibroAmarillo from '../assets/LibroAmarillo.png';
-import LibroMorado from '../assets/LibroMorado.png';
-import LibroVerde from '../assets/LibroVerde.png';
+import LibroRojo from '../assets/LibroRojo.webp';
+import LibroAzul from '../assets/LibroAzul.webp';
+import LibroAmarillo from '../assets/LibroAmarillo.webp';
+import LibroMorado from '../assets/LibroMorado.webp';
+import LibroVerde from '../assets/LibroVerde.webp';
 
 class LibroAnimado {
     static imagenesLibros = [];
